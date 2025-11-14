@@ -1,6 +1,6 @@
 {
-    "name": "Lonar - Your Digital Strategic Assistant",
-    "short_name": "LonarAI",
+    "name": "Lerri - Your Digital Strategic Assistant",
+    "short_name": "LerriAI",
     "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#667eea",

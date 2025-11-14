@@ -1,14 +1,14 @@
-# 🌐 Lonar – Your Intelligent Personal Assistant
+# 🌐 Lerri – Your Intelligent Personal Assistant
 
-You can try Lonar at [https://leonardocofone.github.io/LonarAI/](https://leonardocofone.github.io/LonarAI/)  
-Lonar is a **website and PWA** that combines artificial intelligence and productivity tools.  
+You can try Lerri at [https://leonardocofone.github.io/LerriAI/](https://leonardocofone.github.io/LerriAI/)  
+Lerri is a **website and PWA** that combines artificial intelligence and productivity tools.  
 Its goal is to provide a **complete personal assistant** capable of managing daily tasks, emails, calendars, documents, reminders, and notifications — all in one unified platform.
 
 ---
 
 ## ✨ Vision
 
-Lonar is designed to be a **smart digital assistant** that:
+Lerri is designed to be a **smart digital assistant** that:
 
 - Organizes your day and appointments  
 - Manages calendars, tasks, documents, and emails  
@@ -21,7 +21,7 @@ The focus is on helping users **stay organized, productive, and informed**.
 
 ## 🧩 Project Structure
 
-LonarAI/
+LerriAI/
 ├── backend/                      # Node.js backend + agents and API management
 │   ├── server.js                 # Main Node.js server (API + agent orchestration)
 │   ├── refreshTokens.js          # Script to regenerate access tokens
@@ -39,59 +39,58 @@ LonarAI/
 │   │   └── daily-briefing-agent.js # Generates daily briefing
 │
 │   ├── tools/                    # Modules to interface with external services
-│   │   ├── calendar-tool.js      # Google Calendar API
-│   │   ├── tasks-tool.js         # Local task management
-│   │   ├── gmail-tool.js         # Gmail API
-│   │   ├── documents-tool.js     # Local documents manager
-│   │   ├── finance-tool.js       # Finance/projects tracking
-│   │   ├── sheets-tool.js        # Google Sheets API
-│   │   ├── drive-tool.js         # Google Drive API
-│   │   ├── news-tool.js          # News API
-│   │   ├── weather-tool.js       # Weather API
-│   │   └── index.js              # Exports all tools for easy imports
+│   │   ├── calendar-tool.js
+│   │   ├── tasks-tool.js
+│   │   ├── gmail-tool.js
+│   │   ├── documents-tool.js
+│   │   ├── finance-tool.js
+│   │   ├── sheets-tool.js
+│   │   ├── drive-tool.js
+│   │   ├── news-tool.js
+│   │   ├── weather-tool.js
+│   │   └── index.js
 │
-│   ├── prompts/                  # AI prompts
+│   ├── prompts/
 │   │   ├── routing-prompt.js
 │   │   ├── jarvis-prompt.js
 │   │   └── briefing-prompt.js
 │
-│   ├── memory/                   # Conversation memory management
-│   │   └── conversation-memory.js # Chat memory (e.g., last 4 messages context)
+│   ├── memory/
+│   │   └── conversation-memory.js
 │
-│   ├── tts/                      # Text-to-speech / speech-to-text
-│   │   └── speech-service.js     # Integrates ElevenLabs + Groq for TTS/STT
+│   ├── tts/
+│   │   └── speech-service.js
 │
-│   └── utils/                    # General utilities
-│       ├── model-selector.js     # Selects the best AI model per task
-│       ├── toon-converter.js     # Converts to TOON format
-│       ├── userDataService.js    # Loads user data from backend/data
-│       └── user-utils.js         # Reads and manages users.csv
+│   └── utils/
+│       ├── model-selector.js
+│       ├── toon-converter.js
+│       ├── userDataService.js
+│       └── user-utils.js
 │
 ├── SITO/                         # Frontend / PWA
-│   ├── pwa/                      # Main PWA dashboard
-│   │   ├── index.html            # Dashboard (chat + calendar + tasks + settings)
-│   │   ├── app.js                # Frontend logic (UI, sync, API, agents)
-│   │   ├── app.css               # Frontend styles
-│   │   ├── manifest.json         # PWA configuration
-│   │   ├── sw.js                 # Service Worker (cache, offline support)
-│   │   └── icons/                # App icons
+│   ├── pwa/
+│   │   ├── index.html
+│   │   ├── app.js
+│   │   ├── app.css
+│   │   ├── manifest.json
+│   │   ├── sw.js
+│   │   └── icons/
 │   │       ├── icon-192.png
 │   │       └── icon-512.png
 │
-│   ├── login.html                # Login page
-│   ├── existing.html             # Existing users page
-│   ├── onboarding.html           # Onboarding
-│   ├── onboarding.css            # Onboarding styles
-│   ├── onboarding.js             # Onboarding scripts
-│   ├── gia_registrato.html       # Already registered users page
-│   ├── PrivacyPolicy.html        # Privacy Policy
-│   ├── Terms_&_Conditions.html   # Terms of Service
-│   ├── auth.js                   # Login/signup logic
-│   ├── style.css                 # General public styles
-│   ├── script.js                 # Landing/login scripts
-│   ├── index.html                # Main landing page
-│   └── README.md                 # Complete project documentation
-
+│   ├── login.html
+│   ├── existing.html
+│   ├── onboarding.html
+│   ├── onboarding.css
+│   ├── onboarding.js
+│   ├── gia_registrato.html
+│   ├── PrivacyPolicy.html
+│   ├── Terms_&_Conditions.html
+│   ├── auth.js
+│   ├── style.css
+│   ├── script.js
+│   ├── index.html
+│   └── README.md
 
 ---
 
@@ -124,7 +123,7 @@ Tracks projects, completed tasks, and expenses. Generates summary reports.
 1. **Login or register** via Google OAuth  
 2. Backend creates a personal file in `data/` with user info  
 3. Access the **main PWA dashboard**  
-4. Chat with Lonar, check schedule, and receive notifications
+4. Chat with Lerri, check schedule, and receive notifications
 
 ---
 

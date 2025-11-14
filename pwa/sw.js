@@ -1,5 +1,5 @@
 const CACHE_VERSION = 1;
-const CACHE_NAME = `lonar-cache-v${CACHE_VERSION}`;
+const CACHE_NAME = `lerri-cache-v${CACHE_VERSION}`;
 const urlsToCache = [
     "./index.html",
     "./app.css",

@@ -247,7 +247,7 @@ function initChat() {
     if (welcomeMsg) {
         welcomeMsg.innerHTML = `
             <h3>👋 Hello ${userName}!</h3>
-            <p>I'm Lonar, your digital strategic AI assistant. How can I help you today?</p>
+            <p>I'm Lerri, your digital strategic AI assistant. How can I help you today?</p>
         `;
     }
     
