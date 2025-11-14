@@ -44,7 +44,7 @@ function makeLinksClickable(text) {
     );
 }
 
-function addMessage(text, sender, save = true, audioBlob = null) {
+function addMessage(text, sender, save = true, audioBlob = null, skipSync = false) {
     const messagesContainer = document.getElementById('messages');
     const welcomeMsg = messagesContainer.querySelector('.welcome-message');
     if (welcomeMsg) welcomeMsg.remove();
@@ -69,10 +69,13 @@ function addMessage(text, sender, save = true, audioBlob = null) {
     messagesContainer.appendChild(msgEl);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-    if (save) {
+    if (save && !skipSync) { 
         messagesArray.push({ text, sender });
         if (messagesArray.length > 25) messagesArray = messagesArray.slice(-25);
         syncToServer();
+    } else if (save) { 
+        messagesArray.push({ text, sender });
+        if (messagesArray.length > 25) messagesArray = messagesArray.slice(-25);
     }
 
     return msgEl;
@@ -301,14 +304,13 @@ function initChat() {
                             const replyText = data.value || data;
                             
                             transcribingMsg.remove();
-                            addMessage(replyText, 'user', true, audioBlob);
+                            addMessage(replyText, 'user', true, audioBlob, true);
 
                             if (data.events) events = data.events;
                             if (data.tasks) tasks = data.tasks;
                             if (data.stats) settings.stats = data.stats;
                             
-                            settings.stats.messages++;
-                            if (data.tasks) tasks = data.tasks; 
+                            await syncToServer();
                             updateStats();
                             
                         } catch (error) {
@@ -342,7 +344,7 @@ function initChat() {
         const msg = chatInput.value.trim();
         if (!msg) return;
 
-        addMessage(msg, 'user');
+        addMessage(msg, 'user', true, null, true);
         chatInput.value = '';
 
         const loadingMsg = addMessage('⏳ Processing...', 'bot', false);
@@ -363,15 +365,14 @@ function initChat() {
             const replyText = data.value || data;
 
             loadingMsg.remove();
-            addMessage(replyText, 'bot');
+            addMessage(replyText, 'bot', true, null, true); 
 
             if (data.events) events = data.events;
             if (data.tasks) tasks = data.tasks;
             if (data.stats) settings.stats = data.stats;
-
-            settings.stats.messages++;
+            
+            await syncToServer();
             updateStats();
-            setTimeout(() => loadDataFromServer(), 2000);
 
         } catch (error) {
             loadingMsg.remove();
