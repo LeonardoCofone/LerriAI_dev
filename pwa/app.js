@@ -302,10 +302,13 @@ function initChat() {
                             
                             transcribingMsg.remove();
                             addMessage(replyText, 'user', true, audioBlob);
+
+                            if (data.events) events = data.events;
+                            if (data.tasks) tasks = data.tasks;
+                            if (data.stats) settings.stats = data.stats;
                             
                             settings.stats.messages++;
                             if (data.tasks) tasks = data.tasks; 
-                            await syncToServer();
                             updateStats();
                             
                         } catch (error) {
@@ -362,8 +365,11 @@ function initChat() {
             loadingMsg.remove();
             addMessage(replyText, 'bot');
 
+            if (data.events) events = data.events;
+            if (data.tasks) tasks = data.tasks;
+            if (data.stats) settings.stats = data.stats;
+
             settings.stats.messages++;
-            await syncToServer();
             updateStats();
             setTimeout(() => loadDataFromServer(), 2000);
 
