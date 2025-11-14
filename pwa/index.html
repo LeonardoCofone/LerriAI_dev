@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LonarAI - Your Digital Strategic Assistant</title>
+    <meta name="theme-color" content="#0827b0">
+    <meta name="description" content="LonarAI - Your digital strategic AI assistant">
+    <link rel="stylesheet" href="app.css">
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="app.js" defer></script>
+
+</head>
+<body>
+    <header>
+        <h1 class="lexor">Lonar</h1>
+        <nav>
+            <ul id="nav-tabs">
+                <li data-tab="chat" class="active" aria-current="page">
+                    <span class="icon">💬</span>
+                    <span class="tab-label">Chat</span>
+                </li>
+                <li data-tab="calendar">
+                    <span class="icon">📅</span>
+                    <span class="tab-label">Calendar</span>
+                </li>
+                <li data-tab="tasks">
+                    <span class="icon">✓</span>
+                    <span class="tab-label">Tasks</span>
+                </li>
+                <li data-tab="settings">
+                    <span class="icon">⚙️</span>
+                    <span class="tab-label">Settings</span>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="chat" class="tab-content active">
+            <div class="chat-window">
+                <div id="messages" class="messages">
+                    <div class="welcome-message">
+                        <h3>👋 Welcome to LonarAI!</h3>
+                        <p>Your digital strategic AI assistant. Ask me anything!</p>
+                    </div>
+                </div>
+                <form id="chat-form">
+                    <button type="button" id="mic-btn" aria-label="Use voice">
+                        🎤
+                    </button>
+
+                    <textarea id="chat-input" placeholder="Write a message..." rows="1" required></textarea>
+
+                    <button type="submit" aria-label="Send message">
+                        <span>Send</span>
+                    </button>
+                </form>
+
+            </div>
+        </section>
+
+        <section id="calendar" class="tab-content">
+            <div class="calendar-container">
+                <div class="calendar-view" id="monthly-view">
+                    <div class="calendar-header">
+                        <button id="prev-month" aria-label="Previous month">‹</button>
+                        <h2 id="calendar-month">October 2025</h2>
+                        <button id="next-month" aria-label="Next month">›</button>
+                    </div>
+                    <div class="calendar-grid-wrapper">
+                        <table id="calendar-grid">
+                            <thead>
+                                <tr>
+                                    <th>Mon</th>
+                                    <th>Tue</th>
+                                    <th>Wed</th>
+                                    <th>Thu</th>
+                                    <th>Fri</th>
+                                    <th>Sat</th>
+                                    <th>Sun</th>
+                                </tr>
+                            </thead>
+                            <tbody id="calendar-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="day-view hidden" id="day-view">
+                    <div class="day-header">
+                        <button id="back-to-month" aria-label="Back to calendar">← Back</button>
+                        <h3 id="selected-date-title">Selected Date</h3>
+                    </div>
+                    
+                    <div class="day-events">
+                        <h4>Day's Events</h4>
+                        <ul id="day-event-list" class="event-list">
+                            <li class="empty-state">No events for this day</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="day-form">
+                        <h4>Add Event</h4>
+                        <form id="day-event-form">
+                            <input type="hidden" id="day-event-id">
+                            <input type="text" id="day-event-title" placeholder="Event title..." required>
+                            <textarea id="day-event-description" placeholder="Description (optional)" rows="2" style="margin-bottom: 1rem;"></textarea>
+                            <div class="time-inputs">
+                                <div class="input-group">
+                                    <label for="day-event-start">Start</label>
+                                    <input type="time" id="day-event-start">
+                                </div>
+                                <div class="input-group">
+                                    <label for="day-event-end">End</label>
+                                    <input type="time" id="day-event-end">
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-primary">Save Event</button>
+                                <button type="button" id="delete-day-event" class="btn-danger">Delete</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tasks" class="tab-content">
+            <div class="tasks-container">
+                <div class="tasks-header">
+                    <h2>My Tasks</h2>
+                    <button id="clear-completed" class="btn-secondary">Clear Completed</button>
+                </div>
+                
+                <form id="task-form">
+                    <div class="task-input-group">
+                        <input type="text" id="task-title" placeholder="New task..." required>
+                        <input type="time" id="task-time" placeholder="Time">
+                        <button type="submit" class="btn-primary">Add</button>
+                    </div>
+                </form>
+                
+                <div class="task-filters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="active">Active</button>
+                    <button class="filter-btn" data-filter="completed">Completed</button>
+                </div>
+                
+                <ul id="task-list" class="task-list">
+                    <li class="empty-state">No tasks. Start by adding one!</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="settings" class="tab-content">
+            <div class="settings-card">
+                    <h2>📅 Orario Ricorrente</h2>
+                    <p>Gestisci il tuo calendario settimanale ricorrente</p>
+                    <button id="open-schedule-manager" class="btn-primary">Modifica Orario</button>
+            </div>
+            <div id="schedule-modal" class="modal hidden">
+                <div class="modal-content schedule-modal-content">
+                    <div class="schedule-header">
+                        <h3>📅 Modifica Orario Ricorrente</h3>
+                        <button id="close-schedule-modal" class="close-btn">×</button>
+                    </div>
+
+                    <!-- Progress Tabs -->
+                    <div class="schedule-tabs">
+                        <button class="schedule-tab-btn active" data-tab="schedule">📚 Orari Fissi</button>
+                        <button class="schedule-tab-btn" data-tab="sports">⚽ Sport</button>
+                        <button class="schedule-tab-btn" data-tab="hobbies">🎨 Hobbies</button>
+                    </div>
+
+                    <!-- Tab: Schedule -->
+                    <div class="schedule-tab-content active" id="schedule-tab">
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; font-weight: 600; color: #2d3748; margin-bottom: 10px;">
+                                Nome Attività:
+                            </label>
+                            <input type="text" id="edit-activity-name" placeholder="es. Scuola, Lavoro, Università" 
+                                style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem;">
+                        </div>
+
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; font-weight: 600; color: #2d3748; margin-bottom: 10px;">
+                                Seleziona Orari (slot da 1 ora):
+                            </label>
+                            <div id="edit-week-calendar" style="display: grid; grid-template-columns: 60px repeat(7, 1fr); gap: 1px; background: #cbd5e0; border-radius: 10px; overflow: hidden;">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; font-weight: 600; color: #2d3748; margin-bottom: 10px;">
+                                Attività Salvate:
+                            </label>
+                            <div id="edit-activities-list" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                            </div>
+                        </div>
+
+                        <button onclick="saveEditActivity()" class="btn-primary" style="width: 100%; margin-top: 15px;">
+                            💾 Salva Attività Corrente
+                        </button>
+                    </div>
+
+                    <!-- Tab: Sports -->
+                    <div class="schedule-tab-content" id="sports-tab">
+                        <div class="quick-items-grid">
+                            <button class="quick-add-btn" onclick="addEditSport('Calcio', '⚽')">
+                                <span style="font-size: 2rem;">⚽</span>
+                                Calcio
+                            </button>
+                            <button class="quick-add-btn" onclick="addEditSport('Basket', '🏀')">
+                                <span style="font-size: 2rem;">🏀</span>
+                                Basket
+                            </button>
+                            <button class="quick-add-btn" onclick="addEditSport('Nuoto', '🏊')">
+                                <span style="font-size: 2rem;">🏊</span>
+                                Nuoto
+                            </button>
+                            <button class="quick-add-btn" onclick="addEditSport('Palestra', '💪')">
+                                <span style="font-size: 2rem;">💪</span>
+                                Palestra
+                            </button>
+                            <button class="quick-add-btn" onclick="addEditSport('Yoga', '🧘')">
+                                <span style="font-size: 2rem;">🧘</span>
+                                Yoga
+                            </button>
+                            <button class="quick-add-btn" onclick="addEditSport('Corsa', '🏃')">
+                                <span style="font-size: 2rem;">🏃</span>
+                                Corsa
+                            </button>
+                        </div>
+
+                        <div style="display: flex; gap: 15px; margin: 20px 0;">
+                            <input type="text" id="custom-sport-name" placeholder="Aggiungi sport personalizzato..." 
+                                style="flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px;">
+                            <button onclick="addCustomEditSport()" class="btn-primary">➕ Aggiungi</button>
+                        </div>
+
+                        <div id="edit-sports-list" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px;">
+                        </div>
+                    </div>
+
+                    <!-- Tab: Hobbies -->
+                    <div class="schedule-tab-content" id="hobbies-tab">
+                        <div class="quick-items-grid">
+                            <button class="quick-add-btn" onclick="addEditHobby('Leggere', '📚')">
+                                <span style="font-size: 2rem;">📚</span>
+                                Leggere
+                            </button>
+                            <button class="quick-add-btn" onclick="addEditHobby('Pregare', '🙏')">
+                                <span style="font-size: 2rem;">🙏</span>
+                                Pregare
+                            </button>
+                            <button class="quick-add-btn" onclick="addEditHobby('Meditare', '🧘‍♂️')">
+                                <span style="font-size: 2rem;">🧘‍♂️</span>
+                                Meditare
+                            </button>
+                            <button class="quick-add-btn" onclick="addEditHobby('Suonare', '🎸')">
+                                <span style="font-size: 2rem;">🎸</span>
+                                Suonare
+                            </button>
+                            <button class="quick-add-btn" onclick="addEditHobby('Disegnare', '🎨')">
+                                <span style="font-size: 2rem;">🎨</span>
+                                Disegnare
+                            </button>
+                            <button class="quick-add-btn" onclick="addEditHobby('Scrivere', '✍️')">
+                                <span style="font-size: 2rem;">✍️</span>
+                                Scrivere
+                            </button>
+                        </div>
+
+                        <div style="display: flex; gap: 15px; margin: 20px 0;">
+                            <input type="text" id="custom-hobby-name" placeholder="Aggiungi hobby personalizzato..." 
+                                style="flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px;">
+                            <button onclick="addCustomEditHobby()" class="btn-primary">➕ Aggiungi</button>
+                        </div>
+
+                        <div id="edit-hobbies-list" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px;">
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+                        <div style="margin-bottom: 20px; padding: 15px; background: #eef2ff; border-radius: 10px;">
+                            <label style="display: flex; align-items: center; gap: 10px; margin: 0; font-weight: normal;">
+                                <input type="checkbox" id="edit-recur-forever" checked style="width: 20px; height: 20px;">
+                                <span>Ripeti ogni settimana per 10 anni (consigliato)</span>
+                            </label>
+                        </div>
+
+                        <div style="display: flex; gap: 15px;">
+                            <button id="cancel-schedule" class="btn-secondary" style="flex: 1;">Annulla</button>
+                            <button id="save-schedule" class="btn-primary" style="flex: 1;">💾 Salva Modifiche</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-container">
+                <div class="settings-card">
+                    <h2>💰 AI Budget</h2>
+                    <div class="budget-display">
+                        <div class="budget-item">
+                            <span class="label">Current Spend</span>
+                            <span class="value">€<span id="current-spend">0.00</span></span>
+                        </div>
+                        <div class="budget-item">
+                            <span class="label">Monthly Limit</span>
+                            <span class="value">€<span id="max-spend-display">10.00</span></span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="spend-progress" class="progress-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <form id="settings-form">
+                        <label for="max-spend">Set Monthly Limit (€)</label>
+                        <input type="number" id="max-spend" placeholder="e.g. 10" min="0" step="0.01" value="10">
+                        <button type="submit" class="btn-primary">Save Limit</button>
+                    </form>
+                </div>
+
+                <div class="settings-card">
+                    <div class="model-info">
+                        <p>Estimated cost for 1 million words: <strong>€<span id="model-cost">0.75€</span></strong></p>
+                        <p class="info-text">Selected model affects performance and costs</p>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h2>📊 Statistics</h2>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Messages Sent</span>
+                            <span class="stat-value" id="total-messages">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Events Created</span>
+                            <span class="stat-value" id="total-events">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Tasks Completed</span>
+                            <span class="stat-value" id="total-tasks">0</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Delete Account Modal -->
+                 <div class="settings-card">
+                    <h2>⚙️ Account</h2>
+                    <button id="delete-account" class="btn-danger">Delete Account</button>
+                </div>
+                <div id="delete-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <h3>⚠️ Confirm Account Deletion</h3>
+                        <p>Are you sure you want to delete your account? <br>All your messages, tasks, events, and settings will be permanently deleted.<br>There is NO comeback</p>
+                        <div class="modal-actions">
+                            <button id="cancel-delete" class="btn-secondary">Cancel</button>
+                            <button id="confirm-delete" class="btn-danger">Delete</button>
+                        </div>
+                    </div>
+                </div>
+                
+
+            </div>
+        </section>
+    </main>
+
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("./sw.js")
+                    .then(reg => console.log("SW registrato con successo:", reg.scope))
+                    .catch(err => console.error("Errore registrazione SW:", err));
+            });
+        }
+
+        // === Gestione input chat ===
+        const chatForm = document.getElementById("chat-form");
+        const chatInput = document.getElementById("chat-input");
+
+        if (chatForm && chatInput) {
+            // Invio con Enter, a capo con Shift+Enter
+            chatInput.addEventListener("keydown", function (e) {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    chatForm.requestSubmit();
+                }
+            });
+
+            // Auto-resize fino a 4 righe con scroll automatico
+            chatInput.addEventListener("input", function () {
+                this.style.height = "auto";
+                const lineHeight = parseInt(window.getComputedStyle(this).lineHeight);
+                const maxHeight = lineHeight * 4;
+                this.style.overflowY = this.scrollHeight > maxHeight ? "auto" : "hidden";
+                this.style.height = Math.min(this.scrollHeight, maxHeight) + "px";
+
+                // scroll sempre all'ultima riga
+                this.scrollTop = this.scrollHeight;
+            });
+        }
+
+</script>
+
+<script>
+// Variables per la gestione del modal
+let editScheduleBlocks = {};
+let editSportsActivities = [];
+let editHobbiesActivities = [];
+let editCurrentSelection = new Set();
+const editDaysIt = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
+const editDaysEn = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+// Inizializza Schedule Manager
+function initScheduleManager() {
+    const openBtn = document.getElementById('open-schedule-manager');
+    const modal = document.getElementById('schedule-modal');
+    const closeBtn = document.getElementById('close-schedule-modal');
+    const cancelBtn = document.getElementById('cancel-schedule');
+    const saveBtn = document.getElementById('save-schedule');
+
+    if (!openBtn || !modal) return;
+
+    openBtn.addEventListener('click', () => {
+        loadCurrentSchedule();
+        modal.classList.remove('hidden');
+    });
+
+    closeBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+
+    saveBtn.addEventListener('click', saveScheduleChanges);
+
+    // Tab switching
+    document.querySelectorAll('.schedule-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetTab = btn.dataset.tab;
+            
+            document.querySelectorAll('.schedule-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            document.querySelectorAll('.schedule-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(targetTab + '-tab').classList.add('active');
+        });
+    });
+}
+
+function loadCurrentSchedule() {
+    editScheduleBlocks = {};
+    editCurrentSelection = new Set();
+    editSportsActivities = [];
+    editHobbiesActivities = [];
+    
+    // Carica dalla configurazione corrente
+    if (settings.schedule && settings.schedule.subjects) {
+        settings.schedule.subjects.forEach((subject, index) => {
+            if (subject.hasTime && subject.days && subject.days.length > 0) {
+                const blocks = [];
+                subject.days.forEach(day => {
+                    blocks.push({
+                        day: day,
+                        time: subject.startTime
+                    });
+                });
+                editScheduleBlocks[index] = {
+                    name: subject.name,
+                    blocks: blocks
+                };
+            }
+        });
+    }
+
+    if (settings.schedule && settings.schedule.sports) {
+        editSportsActivities = settings.schedule.sports.map(s => ({
+            name: s.name,
+            emoji: s.emoji || '⚽'
+        }));
+    }
+
+    if (settings.schedule && settings.schedule.hobbies) {
+        editHobbiesActivities = settings.schedule.hobbies.map(h => ({
+            name: h.name,
+            emoji: h.emoji || '🎨'
+        }));
+    }
+
+    generateEditCalendar();
+    renderEditActivities();
+    renderEditSports();
+    renderEditHobbies();
+}
+
+function generateEditCalendar() {
+    const calendar = document.getElementById('edit-week-calendar');
+    if (!calendar) return;
+
+    const startHour = 6;
+    const endHour = 23;
+    const interval = 60;
+
+    calendar.innerHTML = '';
+    
+    const emptyHeader = document.createElement('div');
+    emptyHeader.style.cssText = 'background: #4a5568; color: white; padding: 10px; text-align: center; font-weight: 600; font-size: 0.85rem;';
+    calendar.appendChild(emptyHeader);
+
+    editDaysIt.forEach((day, idx) => {
+        const header = document.createElement('div');
+        header.style.cssText = 'background: #4a5568; color: white; padding: 10px; text-align: center; font-weight: 600; font-size: 0.85rem;';
+        header.textContent = day.substring(0, 3);
+        calendar.appendChild(header);
+    });
+
+    for (let hour = startHour; hour < endHour; hour++) {
+        const timeStr = `${String(hour).padStart(2, '0')}:00`;
+        
+        const timeLabel = document.createElement('div');
+        timeLabel.style.cssText = 'background: #f7fafc; padding: 10px; text-align: center; font-size: 0.8rem; color: #4a5568; display: flex; align-items: center; justify-content: center;';
+        timeLabel.textContent = timeStr;
+        calendar.appendChild(timeLabel);
+
+        editDaysIt.forEach((day, idx) => {
+            const cell = document.createElement('div');
+            cell.style.cssText = 'background: white; min-height: 40px; cursor: pointer; transition: all 0.2s; position: relative;';
+            cell.dataset.day = editDaysEn[idx];
+            cell.dataset.time = timeStr;
+            
+            const key = `${editDaysEn[idx]}-${timeStr}`;
+            if (editCurrentSelection.has(key)) {
+                cell.style.background = '#667eea';
+                cell.innerHTML = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.2rem; font-weight: bold;">✓</div>';
+            }
+
+            cell.addEventListener('mouseenter', () => {
+                if (!editCurrentSelection.has(key)) {
+                    cell.style.background = '#edf2f7';
+                }
+            });
+
+            cell.addEventListener('mouseleave', () => {
+                if (!editCurrentSelection.has(key)) {
+                    cell.style.background = 'white';
+                }
+            });
+
+            cell.addEventListener('click', () => toggleEditCell(key, cell));
+            calendar.appendChild(cell);
+        });
+    }
+}
+
+function toggleEditCell(key, cell) {
+    if (editCurrentSelection.has(key)) {
+        editCurrentSelection.delete(key);
+        cell.style.background = 'white';
+        cell.innerHTML = '';
+    } else {
+        editCurrentSelection.add(key);
+        cell.style.background = '#667eea';
+        cell.innerHTML = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.2rem; font-weight: bold;">✓</div>';
+    }
+}
+
+function saveEditActivity() {
+    if (editCurrentSelection.size === 0) {
+        alert('Seleziona almeno una cella del calendario!');
+        return;
+    }
+
+    const activityName = document.getElementById('edit-activity-name').value.trim() || 'Attività';
+    const blocks = Array.from(editCurrentSelection).map(key => {
+        const [day, time] = key.split('-');
+        return { day, time };
+    });
+
+    const activityId = Date.now();
+    editScheduleBlocks[activityId] = {
+        name: activityName,
+        blocks: blocks
+    };
+
+    renderEditActivities();
+    editCurrentSelection.clear();
+    generateEditCalendar();
+    document.getElementById('edit-activity-name').value = '';
+}
+
+function renderEditActivities() {
+    const list = document.getElementById('edit-activities-list');
+    if (!list) return;
+
+    list.innerHTML = '';
+
+    Object.entries(editScheduleBlocks).forEach(([id, activity]) => {
+        const tag = document.createElement('div');
+        tag.className = 'activity-tag-edit';
+        tag.innerHTML = `
+            <span>📚 ${activity.name} (${activity.blocks.length} slot)</span>
+            <button onclick="removeEditActivity(${id})">×</button>
+        `;
+        list.appendChild(tag);
+    });
+}
+
+function removeEditActivity(id) {
+    delete editScheduleBlocks[id];
+    renderEditActivities();
+}
+
+function addEditSport(name, emoji) {
+    editSportsActivities.push({ name, emoji });
+    renderEditSports();
+}
+
+function addCustomEditSport() {
+    const input = document.getElementById('custom-sport-name');
+    const name = input.value.trim();
+    if (name) {
+        editSportsActivities.push({ name, emoji: '⚽' });
+        input.value = '';
+        renderEditSports();
+    }
+}
+
+function renderEditSports() {
+    const list = document.getElementById('edit-sports-list');
+    if (!list) return;
+
+    list.innerHTML = '';
+
+    editSportsActivities.forEach((sport, index) => {
+        const tag = document.createElement('div');
+        tag.className = 'activity-tag-edit';
+        tag.innerHTML = `
+            <span>${sport.emoji} ${sport.name}</span>
+            <button onclick="removeEditSport(${index})">×</button>
+        `;
+        list.appendChild(tag);
+    });
+}
+
+function removeEditSport(index) {
+    editSportsActivities.splice(index, 1);
+    renderEditSports();
+}
+
+function addEditHobby(name, emoji) {
+    editHobbiesActivities.push({ name, emoji });
+    renderEditHobbies();
+}
+
+function addCustomEditHobby() {
+    const input = document.getElementById('custom-hobby-name');
+    const name = input.value.trim();
+    if (name) {
+        editHobbiesActivities.push({ name, emoji: '🎨' });
+        input.value = '';
+        renderEditHobbies();
+    }
+}
+
+function renderEditHobbies() {
+    const list = document.getElementById('edit-hobbies-list');
+    if (!list) return;
+
+    list.innerHTML = '';
+
+    editHobbiesActivities.forEach((hobby, index) => {
+        const tag = document.createElement('div');
+        tag.className = 'activity-tag-edit';
+        tag.innerHTML = `
+            <span>${hobby.emoji} ${hobby.name}</span>
+            <button onclick="removeEditHobby(${index})">×</button>
+        `;
+        list.appendChild(tag);
+    });
+}
+
+function removeEditHobby(index) {
+    editHobbiesActivities.splice(index, 1);
+    renderEditHobbies();
+}
+
+async function saveScheduleChanges() {
+    // Converti i dati in formato schedule
+    const scheduleData = convertEditToScheduleFormat();
+
+    settings.schedule = scheduleData;
+
+    try {
+        const response = await fetch('http://localhost:3000/api/update-schedule', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: getUserEmail(),
+                schedule: scheduleData
+            })
+        });
+
+        if (!response.ok) throw new Error('Errore aggiornamento schedule');
+
+        await loadDataFromServer();
+        generateCalendar();
+        
+        document.getElementById('schedule-modal').classList.add('hidden');
+        alert('✅ Calendario aggiornato con successo!');
+
+    } catch (error) {
+        console.error('Errore aggiornamento:', error);
+        alert('❌ Errore durante l\'aggiornamento. Riprova.');
+    }
+}
+
+function convertEditToScheduleFormat() {
+    const scheduleByDayTime = {};
+
+    Object.values(editScheduleBlocks).forEach(activity => {
+        activity.blocks.forEach(block => {
+            const key = `${block.day}-${block.time}`;
+            if (!scheduleByDayTime[key]) {
+                scheduleByDayTime[key] = [];
+            }
+            scheduleByDayTime[key].push(activity.name);
+        });
+    });
+
+    // Unifica eventi consecutivi
+    const consolidatedActivities = {};
+    const processedBlocks = new Set();
+
+    Object.entries(scheduleByDayTime).forEach(([key, names]) => {
+        if (processedBlocks.has(key)) return;
+
+        const [day, time] = key.split('-');
+        const [hours] = time.split(':').map(Number);
+        const activityName = names[0];
+
+        let endHour = hours + 1;
+
+        // Cerca blocchi consecutivi
+        let keepLooking = true;
+        while (keepLooking) {
+            const nextTimeStr = `${String(endHour).padStart(2, '0')}:00`;
+            const nextKey = `${day}-${nextTimeStr}`;
+            
+            if (scheduleByDayTime[nextKey] && scheduleByDayTime[nextKey][0] === activityName) {
+                processedBlocks.add(nextKey);
+                endHour++;
+            } else {
+                keepLooking = false;
+            }
+        }
+
+        processedBlocks.add(key);
+
+        if (!consolidatedActivities[activityName]) {
+            consolidatedActivities[activityName] = [];
+        }
+
+        consolidatedActivities[activityName].push({
+            day,
+            start: time,
+            end: `${String(endHour).padStart(2, '0')}:00`
+        });
+    });
+
+    const subjects = [];
+    Object.entries(consolidatedActivities).forEach(([name, timeBlocks]) => {
+        timeBlocks.forEach(timeBlock => {
+            subjects.push({
+                name: name,
+                days: [timeBlock.day],
+                startTime: timeBlock.start,
+                endTime: timeBlock.end,
+                hasTime: true
+            });
+        });
+    });
+
+    const sportsData = editSportsActivities.map(sport => ({
+        name: sport.name,
+        emoji: sport.emoji,
+        days: [],
+        hasTime: false
+    }));
+
+    const hobbiesData = editHobbiesActivities.map(hobby => ({
+        name: hobby.name,
+        emoji: hobby.emoji,
+        days: [],
+        hasTime: false
+    }));
+
+    return {
+        work: null,
+        subjects: subjects,
+        sports: sportsData,
+        hobbies: hobbiesData
+    };
+}
+
+initScheduleManager();
+
+</script>
+
+
+</body>
+</html>

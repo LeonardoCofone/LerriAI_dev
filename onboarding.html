@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LonarAI - Complete Onboarding</title>
+    <link rel="stylesheet" href="onboarding.css">
+</head>
+<body>
+    <div class="container" id="setupView">
+        <h1>🎉 Welcome to Lonar</h1>
+        <p class="subtitle">Let's set up your personal assistant together!</p>
+
+        <div class="progress-bar">
+            <div class="progress-bar-fill" id="progressFill"></div>
+            <div class="step active" data-step="1">
+                <div class="step-circle">1</div>
+                <div class="step-label">Schedule</div>
+            </div>
+            <div class="step" data-step="2">
+                <div class="step-circle">2</div>
+                <div class="step-label">Sports</div>
+            </div>
+            <div class="step" data-step="3">
+                <div class="step-circle">3</div>
+                <div class="step-label">Hobbies</div>
+            </div>
+            <div class="step" data-step="4">
+                <div class="step-circle">✓</div>
+                <div class="step-label">Done</div>
+            </div>
+        </div>
+
+        <div class="section active" id="section1">
+            <div class="section-header">
+                <div class="section-icon">📅</div>
+                <h2 class="section-title">Your Weekly Schedule</h2>
+                <p class="section-description">
+                    Click to create time slots. Click a slot to edit. Drag to move, resize from bottom edge. Select multiple slots (checkbox) to create categories!
+                </p>
+            </div>
+
+            <div class="calendar-controls">
+                <button class="btn-secondary" id="resetCalendarBtn">🔄 Reset Calendar</button>
+            </div>
+
+            <div class="selection-toolbar" id="selectionToolbar">
+                <span class="selection-info" id="selectionInfo">0 slots selected</span>
+                <div class="selection-actions">
+                    <button class="toolbar-btn" id="createCategoryBtn">🔗 Create Category</button>
+                    <button class="toolbar-btn" id="clearSelectionBtn">✖ Clear Selection</button>
+                </div>
+            </div>
+
+            <div class="weekly-calendar-wrapper">
+                <div class="time-labels" id="timeLabels"></div>
+                <div class="weekly-calendar" id="weeklyCalendar"></div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-primary large" id="nextToSportsBtn">Next: Sports & Activities →</button>
+            </div>
+        </div>
+
+        <div class="section" id="section2">
+            <div class="section-header">
+                <div class="section-icon">⚽</div>
+                <h2 class="section-title">Sports & Physical Activities</h2>
+                <p class="section-description">
+                    Add your sports and physical activities. Select the days you practice them, and optionally set specific time ranges!
+                </p>
+            </div>
+
+            <div class="custom-activity-creator">
+                <h3>➕ Add Sport</h3>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="sportName">Sport Name *</label>
+                        <input type="text" id="sportName" placeholder="e.g., Soccer, Gym, Yoga">
+                    </div>
+                    <div class="input-group">
+                        <label for="sportEmojiBtn">Emoji</label>
+                        <div class="emoji-picker-wrapper">
+                            <button type="button" class="emoji-btn" id="sportEmojiBtn">⚽</button>
+                            <div class="emoji-dropdown" id="sportEmojiDropdown"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-group full-width">
+                    <label>Days of the week *</label>
+                    <div class="days-selector">
+                        <button type="button" class="day-btn" data-day="monday">Mon</button>
+                        <button type="button" class="day-btn" data-day="tuesday">Tue</button>
+                        <button type="button" class="day-btn" data-day="wednesday">Wed</button>
+                        <button type="button" class="day-btn" data-day="thursday">Thu</button>
+                        <button type="button" class="day-btn" data-day="friday">Fri</button>
+                        <button type="button" class="day-btn" data-day="saturday">Sat</button>
+                        <button type="button" class="day-btn" data-day="sunday">Sun</button>
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="sportStartTime">Start Time (optional)</label>
+                        <input type="time" id="sportStartTime">
+                    </div>
+                    <div class="input-group">
+                        <label for="sportEndTime">End Time (optional)</label>
+                        <input type="time" id="sportEndTime">
+                    </div>
+                    <div class="input-group">
+                        <button type="button" class="btn-primary" id="addSportBtn">Add Sport</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="saved-items">
+                <h3>✅ Saved Sports</h3>
+                <div id="sportsList" class="items-grid">
+                    <p class="empty-state">No sports added yet</p>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-secondary large" id="backToScheduleBtn">← Back</button>
+                <button class="btn-primary large" id="nextToHobbiesBtn">Next: Hobbies →</button>
+            </div>
+        </div>
+
+        <div class="section" id="section3">
+            <div class="section-header">
+                <div class="section-icon">🎨</div>
+                <h2 class="section-title">Hobbies & Personal Interests</h2>
+                <p class="section-description">
+                    What do you love doing in your free time? Add your hobbies and select when you usually practice them!
+                </p>
+            </div>
+
+            <div class="custom-activity-creator">
+                <h3>➕ Add Hobby</h3>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="hobbyName">Hobby Name *</label>
+                        <input type="text" id="hobbyName" placeholder="e.g., Reading, Prayer, Drawing">
+                    </div>
+                    <div class="input-group">
+                        <label for="hobbyEmojiBtn">Emoji</label>
+                        <div class="emoji-picker-wrapper">
+                            <button type="button" class="emoji-btn" id="hobbyEmojiBtn">📚</button>
+                            <div class="emoji-dropdown" id="hobbyEmojiDropdown"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-group full-width">
+                    <label>Days of the week *</label>
+                    <div class="days-selector" id="hobbyDaysSelector">
+                        <button type="button" class="day-btn" data-day="monday">Mon</button>
+                        <button type="button" class="day-btn" data-day="tuesday">Tue</button>
+                        <button type="button" class="day-btn" data-day="wednesday">Wed</button>
+                        <button type="button" class="day-btn" data-day="thursday">Thu</button>
+                        <button type="button" class="day-btn" data-day="friday">Fri</button>
+                        <button type="button" class="day-btn" data-day="saturday">Sat</button>
+                        <button type="button" class="day-btn" data-day="sunday">Sun</button>
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="hobbyStartTime">Start Time (optional)</label>
+                        <input type="time" id="hobbyStartTime">
+                    </div>
+                    <div class="input-group">
+                        <label for="hobbyEndTime">End Time (optional)</label>
+                        <input type="time" id="hobbyEndTime">
+                    </div>
+                    <div class="input-group">
+                        <button type="button" class="btn-primary" id="addHobbyBtn">Add Hobby</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="saved-items">
+                <h3>✅ Saved Hobbies</h3>
+                <div id="hobbiesList" class="items-grid">
+                    <p class="empty-state">No hobbies added yet</p>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-secondary large" id="backToSportsBtn">← Back</button>
+                <button class="btn-primary large" id="finishSetupBtn">🎉 Complete Setup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container hidden" id="loadingView">
+        <div class="loading">
+            <div class="spinner"></div>
+            <h1>Organizing your calendar...</h1>
+            <p class="subtitle">Generating 10 years of events! ✨</p>
+        </div>
+    </div>
+
+    <div class="modal-overlay hidden" id="slotEditorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✏️ Edit Time Slot</h3>
+                <button class="modal-close" id="closeModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="slotName">Activity Name</label>
+                    <input type="text" id="slotName" placeholder="e.g., Math Class, Meeting">
+                </div>
+                <div class="input-group">
+                    <label for="slotEmojiBtn">Emoji</label>
+                    <div class="emoji-picker-wrapper">
+                        <button type="button" class="emoji-btn" id="slotEmojiBtn">📅</button>
+                        <div class="emoji-dropdown" id="slotEmojiDropdown"></div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="slotDescription">Description (optional)</label>
+                    <textarea id="slotDescription" rows="3" placeholder="Additional notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="deleteSlotBtn">🗑️ Delete</button>
+                <button class="btn-primary" id="saveSlotBtn">💾 Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay hidden" id="categoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔗 Create Category</h3>
+                <button class="modal-close" id="closeCategoryModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="categoryName">Category Name</label>
+                    <input type="text" id="categoryName" placeholder="e.g., SCHOOL, WORK, TRAINING">
+                </div>
+                <div class="slot-time-info">
+                    <strong>Selected slots:</strong> <span id="categorySlotsList"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelCategoryBtn">Cancel</button>
+                <button class="btn-primary" id="saveCategoryBtn">💾 Create Category</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="onboarding.js"></script>
+</body>
+</html>

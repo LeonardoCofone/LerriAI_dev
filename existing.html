@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LonarAI - Login</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+:root {
+    --color-primary: #1A53E4;
+    --color-secondary: #34A853;
+    --color-danger: #f44336;
+    --color-background: linear-gradient(135deg,#667eea,#764ba2);
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* blocca scroll esterno */
+}
+
+body.login-page {
+    font-family: 'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background: var(--color-background);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    color: #333;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.container {
+    background: rgba(255,255,255,0.98);
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    max-width: 450px;
+    max-height: 100vh; /* mai più alto dello schermo */
+    overflow-y: auto; /* scroll solo se necessario nel container */
+    width: 90%;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s;
+}
+
+.icon {
+    color: var(--color-primary);
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+h1 {
+    color: var(--color-primary);
+    margin-bottom: 0.5rem;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.subtitle {
+    color: #666;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+    font-size: 0.9rem;
+}
+
+.form-group {
+    margin-bottom: 1.2rem;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.4rem;
+    color: #555;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+input {
+    width: 100%;
+    padding: 0.8rem;
+    border-radius: 12px;
+    border: 2px solid #e0e0e0;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+    box-sizing: border-box;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(26,83,228,0.1);
+}
+
+button.primary-btn {
+    width: 100%;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 0.9rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 1rem;
+}
+
+button.primary-btn:hover {
+    background: var(--color-secondary);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(52,168,83,0.4);
+}
+
+button.primary-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.loading {
+    display: none;
+    margin-top: 1rem;
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.loading.active {
+    display: block;
+}
+
+.link-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+}
+
+.link-section p {
+    color: #666;
+    margin: 0;
+}
+
+.link-section a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.link-section a:hover {
+    color: var(--color-secondary);
+    text-decoration: underline;
+}
+
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    display: none;
+    align-items: center;
+    gap: 1rem;
+    z-index: 9999;
+    max-width: 400px;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(400px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.form-group {
+    position: relative;
+}
+
+.notification.show {
+    display: flex;
+}
+
+.notification.error {
+    border-left: 4px solid var(--color-danger);
+}
+
+.notification.success {
+    border-left: 4px solid var(--color-secondary);
+}
+
+.show-pass {
+    position: absolute;
+    right: 12px;
+    top: 70%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.show-pass:hover {
+    color: var(--color-primary);
+    transform: translateY(-50%) scale(1.2);
+}
+
+@media (max-height: 600px), (max-width: 500px) {
+    .container {
+        padding: 1rem;
+        max-width: 90%;
+        font-size: 0.85rem;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    .subtitle {
+        font-size: 0.8rem;
+        margin-bottom: 1rem;
+    }
+
+    input, button {
+        font-size: 0.85rem;
+        padding: 0.5rem;
+    }
+
+    .icon {
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .link-section {
+        margin-top: 1rem;
+    }
+}
+
+</style>
+</head>
+<body class="login-page">
+
+<section class="container animate__animated animate__fadeIn">
+    <h1 class="animate__animated animate__fadeInUp">Welcome Back</h1>
+    <p class="subtitle animate__animated animate__fadeInUp animate__delay-1s">
+        Log in with your email and password
+    </p>
+
+    <form id="loginForm" class="animate__animated animate__fadeInUp animate__delay-2s">
+        <div class="form-group">
+            <label for="loginEmail">Email</label>
+            <input type="email" id="loginEmail" placeholder="your-email@example.com" required autocomplete="email">
+        </div>
+        
+        <div class="form-group">
+            <label for="loginPassword">Password</label>
+            <input type="password" id="loginPassword" placeholder="Enter your password" required autocomplete="current-password">
+            <i class="fa-solid fa-eye show-pass" id="togglePass"></i>
+        </div>
+
+        <button type="submit" class="primary-btn">
+            <i class="fas fa-sign-in-alt"></i> Log In
+        </button>
+    </form>
+
+    <div class="loading" id="loadingIndicator">
+        <i class="fas fa-spinner fa-spin"></i> Logging in...
+    </div>
+
+    <div class="link-section">
+        <p>Don't have an account? <a href="login.html">Register here</a></p>
+    </div>
+</section>
+
+<div class="notification" id="notification">
+    <i class="fas fa-info-circle"></i>
+    <span id="notificationText"></span>
+</div>
+
+<script src="auth.js"></script>
+<script>
+const toggle = document.getElementById("togglePass");
+const pass = document.getElementById("loginPassword");
+
+toggle.addEventListener("click", () => {
+    const type = pass.type === "password" ? "text" : "password";
+    pass.type = type;
+    toggle.classList.toggle("fa-eye");
+    toggle.classList.toggle("fa-eye-slash");
+});
+</script>
+</body>
+</html>

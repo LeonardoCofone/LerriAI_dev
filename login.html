@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lonar - Registration</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+:root {
+    --color-primary: #1A53E4;
+    --color-secondary: #34A853;
+    --color-danger: #f44336;
+    --color-background: linear-gradient(135deg,#667eea,#764ba2,#f093fb,#f5576c);
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; 
+}
+body.login-page {
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:var(--color-background);
+    background-size:400% 400%;
+    animation:gradientShift 8s ease infinite;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+    margin:0;
+    padding:20px;
+    color:#333;
+}
+@keyframes gradientShift{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
+.container {
+    background: rgba(255,255,255,0.95);
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    max-width: 350px;
+    max-height: 100vh;
+    overflow: auto;
+    width: 90%;
+    text-align: center;
+    transition: all 0.3s;
+    backdrop-filter: blur(8px);
+}
+
+.icon {
+    color:var(--color-primary);
+    font-size:4rem;
+    margin-bottom:1rem;
+    animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+    0%,100% { transform:scale(1); }
+    50% { transform:scale(1.1); }
+}
+h1 {
+    color:var(--color-primary);
+    margin-bottom:0.5rem;
+    font-size:1.5rem;
+    font-weight:700;
+}
+.subtitle {
+    color:#666;
+    margin-bottom:1.3rem;
+    line-height:1.6;
+    font-size:0.9rem;
+}
+.form-group {
+    margin-bottom:1.2rem;
+    text-align:left;
+    position:relative;
+}
+.form-group label {
+    display:block;
+    margin-bottom:0.4rem;
+    color:#555;
+    font-weight:600;
+    font-size:0.95rem;
+}
+input, select {
+    width:100%;
+    padding:0.5rem;
+    border-radius:10px;
+    border:2px solid #e0e0e0;
+    font-size:0.9rem;
+    transition:all 0.3s;
+    box-sizing:border-box;
+}
+input:focus, select:focus {
+    outline:none;
+    border-color:var(--color-primary);
+    box-shadow:0 0 0 3px rgba(26,83,228,0.1);
+}
+button.primary-btn {
+    width:100%;
+    background:var(--color-primary);
+    color:white;
+    border:none;
+    padding:0.8rem;
+    border-radius:10px;
+    font-size:1rem;
+    font-weight:700;
+    cursor:pointer;
+    transition:all 0.3s;
+    margin-top:1rem;
+}
+button.primary-btn:hover {
+    background:var(--color-secondary);
+    transform:translateY(-2px);
+    box-shadow:0 10px 25px rgba(52,168,83,0.4);
+}
+button.primary-btn:disabled {
+    background:#ccc;
+    cursor:not-allowed;
+    transform:none;
+}
+.loading {
+    display:none;
+    margin-top:1rem;
+    color:var(--color-primary);
+    font-weight:600;
+}
+.loading.active {
+    display:block;
+}
+.link-section {
+    margin-top:2rem;
+    padding-top:1.5rem;
+    border-top:1px solid #e0e0e0;
+}
+.link-section p {
+    color:#666;
+    margin:0;
+}
+.link-section a {
+    color:var(--color-primary);
+    text-decoration:none;
+    font-weight:600;
+}
+.link-section a:hover {
+    color:var(--color-secondary);
+    text-decoration:underline;
+}
+.notification {
+    position:fixed;
+    top:20px;
+    right:20px;
+    background:white;
+    padding:1rem 1.5rem;
+    border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.2);
+    display:none;
+    align-items:center;
+    gap:1rem;
+    z-index:9999;
+    max-width:400px;
+    animation:slideIn 0.3s ease;
+}
+@keyframes slideIn {
+    from { transform:translateX(400px); opacity:0; }
+    to { transform:translateX(0); opacity:1; }
+}
+.notification.show {
+    display:flex;
+}
+.notification.error {
+    border-left:4px solid var(--color-danger);
+}
+.notification.success {
+    border-left:4px solid var(--color-secondary);
+}
+.show-pass {
+    position: absolute;
+    right: 12px;
+    top: 70%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+}
+.show-pass:hover {
+    color: var(--color-primary);
+}
+
+@media (max-height: 600px), (max-width: 500px) {
+    .container {
+        padding: 1rem;
+        max-width: 90%;
+        font-size: 0.85rem;
+    }
+
+    h1 {
+        font-size: 1.3rem;
+    }
+
+    .subtitle {
+        font-size: 0.8rem;
+        margin-bottom: 1rem;
+    }
+
+    input, select, button {
+        font-size: 0.85rem;
+        padding: 0.4rem;
+    }
+
+    .icon {
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .link-section {
+        margin-top: 1rem;
+    }
+}
+</style>
+</head>
+<body class="login-page">
+
+<section class="container animate__animated animate__fadeIn">
+    
+    <h1 class="animate__animated animate__fadeInUp">Welcome to Lonar</h1>
+    <p class="subtitle animate__animated animate__fadeInUp animate__delay-1s">
+        Create your account to get started.
+    </p>
+
+    <form id="registerForm" class="animate__animated animate__fadeInUp animate__delay-2s">
+        <div class="form-group">
+            <label for="nameInput">How should Lonar call you?</label>
+            <input type="text" id="nameInput" placeholder="Ex: John Doe" required autocomplete="name">
+        </div>
+        
+        <div class="form-group">
+            <label for="passwordInput">Password</label>
+            <input type="password" id="passwordInput" placeholder="Choose a password" required minlength="6" autocomplete="new-password">
+            <i class="fa-solid fa-eye show-pass" id="togglePass"></i>
+        </div>
+        
+        <div class="form-group">
+            <label for="languageSelect">Language and time zone</label>
+                <select id="languageSelect" required style="
+                        width: 100%; 
+                        font-size: 0.9rem; 
+                        padding: 0.5rem; 
+                        max-height: none; 
+                        overflow: visible;
+                    ">
+                        <option value="it">Italiano</option>
+                        <option value="en-GB">English (UK)</option>
+                        <option value="en">English (International)</option>
+                        <option value="es">Español (España)</option>
+                        <option value="es-MX">Español (México)</option>
+                        <option value="fr">Français</option>
+                        <option value="de">Deutsch</option>
+                        <option value="pt">Português (Portugal)</option>
+                        <option value="pt-BR">Português (Brasil)</option>
+                        <option value="ru">Русский</option>
+                        <option value="ja">日本語</option>
+                        <option value="zh">中文 (Simplified)</option>
+                        <option value="ko">한국어</option>
+                        <option value="hi">हिन्दी</option>
+                        <option value="ar">العربية</option>
+                        <option value="en-US">English (US)</option>
+                        <option value="en-AU">English (Australia)</option>
+                    </select>
+
+        </div>
+
+        <button type="submit" class="primary-btn">
+            <i class="fab fa-google"></i> Continue with Google
+        </button>
+    </form>
+
+    <div class="loading" id="loadingIndicator">
+        <i class="fas fa-spinner fa-spin"></i> Connecting...
+    </div>
+
+    <button id="google-login-btn" style="display:none;"></button>
+
+    <div class="link-section">
+        <p>Already have an account? <a href="existing.html">Login here</a></p>
+    </div>
+</section>
+
+<div class="notification" id="notification">
+    <i class="fas fa-info-circle"></i>
+    <span id="notificationText"></span>
+</div>
+
+<script src="auth.js"></script>
+<script>
+const toggle = document.getElementById("togglePass");
+const pass = document.getElementById("passwordInput");
+
+toggle.addEventListener("click", () => {
+    const type = pass.type === "password" ? "text" : "password";
+    pass.type = type;
+    toggle.classList.toggle("fa-eye");
+    toggle.classList.toggle("fa-eye-slash");
+});
+</script>
+
+</body>
+</html>
