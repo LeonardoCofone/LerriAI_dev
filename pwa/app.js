@@ -107,14 +107,6 @@ async function syncToServer() {
         messages: messagesArray 
     };
 
-    console.log('📤 Sending to server:', {
-        user,
-        eventsCount: Object.keys(events).length,
-        tasksCount: tasks.length,
-        maxSpend: settings.maxSpend,
-        settings: settings
-    });
-
     try {
         const response = await fetch("http://localhost:3000/api/save-data", {
             method: "POST",
@@ -280,7 +272,7 @@ function initChat() {
         chatInput.disabled = true;
         chatInput.placeholder = '⚠️ Budget esaurito';
         micBtn.disabled = true;
-        addMessage('⚠️ Hai raggiunto il limite di spesa mensile. Aumenta il budget nelle impostazioni per continuare.', 'bot', false);
+        addMessage('⚠️ You have reached your monthly spending limit. Increase your budget in your settings to continue.', 'bot', false);
         return;
     }
 
@@ -453,6 +445,7 @@ function initChat() {
         } catch (error) {
             loadingMsg.remove();
             addMessage('❌ Server error. Try again.', 'bot');
+            showNotification('❌ Server error. Please try again later.', 'error');
             console.error("Chat error:", error);
         }
     });
@@ -683,6 +676,50 @@ async function deleteTask(id){
     renderTasks(); 
 }
 
+function showNotification(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #fff;
+        padding: 12px 24px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        opacity: 0;
+        transition: opacity 0.5s, bottom 0.5s;
+        z-index: 9999;
+        font-weight: 500;
+    `;
+
+    const colors = {
+        success: '#10b981',
+        error: '#ef4444',
+        warning: '#f59e0b', 
+        info: '#3b82f6'
+    };
+    toast.style.backgroundColor = colors[type] || colors.success;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.bottom = '50px';
+    }, 10);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.bottom = '30px';
+        setTimeout(() => {
+            if (document.body.contains(toast)) {
+                document.body.removeChild(toast);
+            }
+        }, 500);
+    }, 3000);
+}
+
 function initSettings(){
     const settingsForm=document.getElementById('settings-form');
     const maxSpendInput=document.getElementById('max-spend');
@@ -715,7 +752,7 @@ function initSettings(){
         
         await syncToServer();
         updateBudgetDisplay(); 
-        alert('Settings saved!');
+        showNotification('Settings saved!', 'success');
     });
 }
 
