@@ -96,8 +96,13 @@ async function syncToServer() {
         messages: messagesArray 
     };
 
-    console.log("🔄 Syncing data to server...");
-    console.log(payload);
+    console.log('📤 Sending to server:', {
+        user,
+        eventsCount: Object.keys(events).length,
+        tasksCount: tasks.length,
+        maxSpend: settings.maxSpend,
+        settings: settings
+    });
 
     try {
         const response = await fetch("http://localhost:3000/api/save-data", {
@@ -629,7 +634,9 @@ function initSettings(){
     updateModelCost();
     updateLanguageSelect();
     
-    // Nota: initScheduleManager() è chiamato da index.html
+    if (languageSelect) {
+        updateLanguageSelect();
+    }
     
     settingsForm.addEventListener('submit', async e=>{
         e.preventDefault(); 
