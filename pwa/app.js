@@ -175,7 +175,7 @@ function getUserIdentifier() {
 document.addEventListener('DOMContentLoaded', async () => {
     const userEmail = getUserEmail();
     if (!userEmail) {
-        window.location.href = '../login.html';
+        //window.location.href = '../login.html';
         return;
     }
     
@@ -242,7 +242,7 @@ function initChat() {
     const userName = localStorage.getItem('user_name') || 'User';
     
     if (!email) {
-        window.location.href = '../login.html';
+        //window.location.href = '../login.html';
         return;
     }
 
@@ -716,6 +716,6 @@ function initDeleteAccount() {
         }
         localStorage.clear();
         sessionStorage.clear();
-        window.location.href = '../login.html';
+        //window.location.href = '../login.html';
     });
 }
