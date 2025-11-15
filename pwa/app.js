@@ -489,6 +489,7 @@ function loadDayEvents() {
 
 async function saveEvent(){
     const title = document.getElementById('day-event-title').value.trim();
+    const description = document.getElementById('day-event-description').value.trim(); 
     const start = document.getElementById('day-event-start').value;
     const end = document.getElementById('day-event-end').value;
     const eventId = document.getElementById('day-event-id').value;
@@ -496,10 +497,18 @@ async function saveEvent(){
     if(!title) return;
     if(!events[selectedDate]) events[selectedDate] = [];
 
-    const event = { title, start: start || "00:00", end: end || "23:59" };
+    const event = { 
+        title, 
+        description, 
+        start: start || "00:00", 
+        end: end || "23:59" 
+    };
 
     if(eventId) events[selectedDate][parseInt(eventId)] = event;
-    else { events[selectedDate].push(event); settings.stats.events++; }
+    else { 
+        events[selectedDate].push(event); 
+        settings.stats.events++; 
+    }
 
     await syncToServer();
     updateStats(); 
@@ -508,10 +517,12 @@ async function saveEvent(){
     generateCalendar();
 }
 
+
 function editEvent(index){
     const event=events[selectedDate][index];
     document.getElementById('day-event-id').value=index;
     document.getElementById('day-event-title').value=event.title;
+    document.getElementById('day-event-description').value=event.description||'';
     document.getElementById('day-event-start').value=event.start;
     document.getElementById('day-event-end').value=event.end;
 }
