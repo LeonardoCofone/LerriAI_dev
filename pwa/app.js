@@ -96,6 +96,9 @@ async function syncToServer() {
         messages: messagesArray 
     };
 
+    console.log("🔄 Syncing data to server...");
+    console.log(payload);
+
     try {
         const response = await fetch("http://localhost:3000/api/save-data", {
             method: "POST",
