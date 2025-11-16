@@ -967,6 +967,7 @@ async function handleReauth() {
         google.accounts.oauth2.initCodeClient({
             client_id: '580665131503-4cbr5v6hf5e5oruqdbj8s7kjd3jdh4hv.apps.googleusercontent.com',
             scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file',
+            ux_mode: 'popup',
             callback: async (response) => {
                 if (response.code) {
                     const result = await fetch('http://localhost:3000/api/refresh-oauth', {
