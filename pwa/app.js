@@ -1,4 +1,4 @@
-const BACKEND_URL = "http://localhost:3000/api/chat";
+const BACKEND_URL = "http://localhost:3000/api/test-401";//"http://localhost:3000/api/chat";
 const LANGUAGES = {
     "it": "Italiano",
     "en": "English",
