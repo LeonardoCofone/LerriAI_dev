@@ -381,16 +381,12 @@ button:active {
 }
 
 .btn-secondary {
-    background: var(--color-background);
-    color: var(--color-text);
-    border: 1px solid var(--color-border);
-    font-size: 0.875rem;
-    padding: 0.625rem 1rem;
+    background: var(--color-danger);
+    color: white;
 }
 
 .btn-secondary:hover {
-    background: var(--color-surface);
-    border-color: var(--color-text-light);
+    background: var(--color-primary);
 }
 
 .btn-danger {
@@ -815,6 +811,18 @@ button:active {
     font-size: 1.25rem;
     font-weight: 600;
     color: var(--color-text);
+}
+
+.account-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.account-actions button {
+    flex: 1;
+    min-width: 0;
 }
 
 .budget-display {
@@ -1693,6 +1701,15 @@ footer {
     
     .time-range {
         grid-template-columns: 1fr;
+    }
+
+    .account-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .account-actions button {
+        width: 100%;
     }
     
     #edit-week-calendar {
