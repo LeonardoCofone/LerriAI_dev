@@ -1,4 +1,5 @@
 const BACKEND_URL = "http://localhost:3000/api/test-401";//"http://localhost:3000/api/chat";
+const CLIENT_ID = "692895314861-lmsub53tc5mdso1g7rkb6gop098safoe.apps.googleusercontent.com";
 const LANGUAGES = {
     "it": "Italiano",
     "en": "English",
@@ -965,8 +966,19 @@ async function handleReauth() {
     
     try {
         google.accounts.oauth2.initCodeClient({
-            client_id: '580665131503-4cbr5v6hf5e5oruqdbj8s7kjd3jdh4hv.apps.googleusercontent.com',
-            scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file',
+            client_id: CLIENT_ID,
+            scope: [
+                'https://www.googleapis.com/auth/gmail.modify',
+                'https://www.googleapis.com/auth/drive.file',
+                'https://www.googleapis.com/auth/drive',
+                'https://www.googleapis.com/auth/documents',
+                'https://www.googleapis.com/auth/spreadsheets',
+                'https://www.googleapis.com/auth/tasks',
+                'https://www.googleapis.com/auth/calendar',
+                //'https://www.googleapis.com/auth/contacts',
+                'profile',
+                'email'
+            ].join(" "),
             ux_mode: 'popup',
             callback: async (response) => {
                 if (response.code) {
