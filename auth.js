@@ -117,17 +117,15 @@ if (document.getElementById("registerForm")) {
         const tokenClient = google.accounts.oauth2.initCodeClient({
             client_id: CLIENT_ID,
             scope: [
-                'https://www.googleapis.com/auth/gmail.modify',
+                'https://www.googleapis.com/auth/userinfo.email',
+                'https://www.googleapis.com/auth/userinfo.profile',
                 'https://www.googleapis.com/auth/drive.file',
-                'https://www.googleapis.com/auth/drive',
+                'https://www.googleapis.com/auth/calendar.readonly',
                 'https://www.googleapis.com/auth/documents',
                 'https://www.googleapis.com/auth/spreadsheets',
-                'https://www.googleapis.com/auth/tasks',
-                'https://www.googleapis.com/auth/calendar',
-                //'https://www.googleapis.com/auth/contacts',
-                'profile',
-                'email'
+                'https://www.googleapis.com/auth/gmail.send'
             ].join(" "),
+
             ux_mode: "popup",
             redirect_uri: "postmessage",
             callback: async (response) => {
