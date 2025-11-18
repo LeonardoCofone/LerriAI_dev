@@ -522,8 +522,13 @@ function generateCalendar() {
                 if(date===today.getDate() && currentMonth===today.getMonth() && currentYear===today.getFullYear()) 
                     cell.classList.add('today');
                 const dateKey = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
-                if(events[dateKey] && events[dateKey].length>0) 
-                    cell.classList.add('has-events');
+                
+                const recurringEvents = getRecurringEventsForDate(dateKey);
+                const customEvents = events[dateKey] || [];
+                const hasAnyEvents = recurringEvents.length > 0 || customEvents.length > 0;
+                
+                if(hasAnyEvents) cell.classList.add('has-events');
+                
                 const currentDate = date;
                 cell.addEventListener('click',()=>openDayView(currentDate));
                 date++;
@@ -533,6 +538,81 @@ function generateCalendar() {
         tbody.appendChild(row);
         if(date>daysInMonth) break;
     }
+}
+
+function getRecurringEventsForDate(dateKey) {
+    const schedule = settings.schedule;
+    if (!schedule) return [];
+
+    const date = new Date(dateKey);
+    const currentDay = date.getDay();
+    const dayMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
+    const dayName = Object.keys(dayMap).find(d => dayMap[d] === currentDay);
+
+    if (!dayName) return [];
+
+    const recurringEvents = [];
+
+    const dayCategories = (schedule.categories || []).filter(cat => cat.day === dayName);
+    dayCategories.forEach(cat => {
+        const firstSlot = cat.slots[0];
+        const lastSlot = cat.slots[cat.slots.length - 1];
+        const description = cat.slots.map(s => `${s.start}-${s.end}: ${s.emoji} ${s.name}`).join(' | ');
+
+        recurringEvents.push({
+            title: `📁 ${cat.name}`,
+            start: firstSlot.start,
+            end: lastSlot.end,
+            description: description,
+            isRecurring: true
+        });
+    });
+
+    const daySlots = (schedule.slots || []).filter(slot => slot.day === dayName);
+    const categorizedSlotIds = new Set();
+    (schedule.categories || []).forEach(cat => {
+        if (cat.day === dayName) {
+            cat.slotIds.forEach(id => categorizedSlotIds.add(id));
+        }
+    });
+
+    daySlots.forEach(slot => {
+        if (!categorizedSlotIds.has(slot.id)) {
+            recurringEvents.push({
+                title: `${slot.emoji} ${slot.name}`.trim() || 'Activity',
+                start: slot.start,
+                end: slot.end,
+                description: slot.description || '',
+                isRecurring: true
+            });
+        }
+    });
+
+    (schedule.sports || []).forEach(sport => {
+        if (sport.days && sport.days.includes(dayName)) {
+            recurringEvents.push({
+                title: `${sport.emoji} ${sport.name}`,
+                start: sport.startTime || '18:00',
+                end: sport.endTime || '19:30',
+                description: `Sport: ${sport.name}`,
+                isRecurring: true
+            });
+        }
+    });
+
+    (schedule.hobbies || []).forEach(hobby => {
+        if (hobby.days && hobby.days.includes(dayName)) {
+            recurringEvents.push({
+                title: `${hobby.emoji} ${hobby.name}`,
+                start: hobby.startTime || '10:00',
+                end: hobby.endTime || '11:00',
+                description: `Hobby: ${hobby.name}`,
+                isRecurring: true
+            });
+        }
+    });
+
+    return recurringEvents;
 }
 
 function openDayView(day){
@@ -547,13 +627,26 @@ function openDayView(day){
 
 function loadDayEvents() {
     const eventList = document.getElementById('day-event-list');
-    const dayEvents = events[selectedDate] || [];
-    if (dayEvents.length === 0) {
+    const recurringEvents = getRecurringEventsForDate(selectedDate);
+    const customEvents = events[selectedDate] || [];
+    const allEvents = [...recurringEvents, ...customEvents];
+    
+    if (allEvents.length === 0) {
         eventList.innerHTML = '<li class="empty-state">No events for this day</li>';
         return;
     }
+    
     eventList.innerHTML = '';
-    dayEvents.forEach((event, index) => {
+    
+    recurringEvents.forEach((event) => {
+        const li = document.createElement('li');
+        const description = event.description ? `<br><small style="color: rgba(255,255,255,0.8);">${event.description}</small>` : '';
+        li.innerHTML = `<div><strong>${event.title}</strong> <span style="background: rgba(102, 126, 234, 0.2); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; margin-left: 8px;">Recurring</span><br><small>${event.start} - ${event.end}</small>${description}</div>`;
+        li.style.opacity = '0.85';
+        eventList.appendChild(li);
+    });
+    
+    customEvents.forEach((event, index) => {
         const li = document.createElement('li');
         const description = event.description ? `<br><small style="color: rgba(255,255,255,0.8);">${event.description}</small>` : '';
         li.innerHTML = `<div><strong>${event.title}</strong><br><small>${event.start} - ${event.end}</small>${description}</div>
