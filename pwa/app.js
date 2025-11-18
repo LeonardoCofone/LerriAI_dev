@@ -13,6 +13,40 @@ const LANGUAGES = {
     "ar": "العربية"
 };
 
+const emojiCategories = {
+  activities: ['⚽','🏀','🏈','⚾','🎾','🏐','🏉','🎱','🏓','🏸','🥊','🥋','🏋️','🏃','🏊','🚴','🚵','🤸','🤺','🧗','🏂','⛷️','🎽','⛳','🏹','🎣','🧘','💪','🛹','🛼','🤾','⛹️','🏇','🥏','🛶','🚣','🚤','🏄','🏕️','🎯'],
+  education: ['📚','📖','📝','✏️','✒️','🖊️','🖋️','📒','📓','📔','📕','📗','📘','📙','📄','📃','📊','📈','📉','📋','📆','🗓️','📎','🖇️','📏','📐','✂️','📌','📍','🏫','🎓','🧮','🧠','🔬','🔭','🧪','🧫','🧬','💡','📚'],
+  spiritual: ['✝️','⛪','🙏','🕊️','📖','🕯️','⛓️','🫶','💒','🌟','💖','🪔','🧎‍♂️','🧎‍♀️','🤲','🤍','💒','📿','🕊️','✨'],
+  work: ['💼','🏢','🏭','⚙️','🔧','🔨','🪚','🪛','🪜','🔩','💻','🖥️','⌨️','🖱️','🖨️','📱','📞','☎️','🗂️','📂','🗃️','📦','📠','📺','📡','⏰','🕰️','💾','🪙','💰','🧾','🪪','📈','📊','📑','💬','📨','📧','📤','📥'],
+  hobbies: ['🎨','🎭','🎬','🎤','🎧','🎹','🎷','🎺','🎸','🎻','🥁','🎮','🎯','🎳','🎲','♟️','🧩','🎯','🖌️','🧵','🧶','✍️','🪡','🪢','📷','🎥','📹','📸','📼','📻','🪕','🎼','🎶','🎵','🧩','🃏','🎴','🧩','🎰','🧁'],
+  tech: ['💻','🖥️','🖨️','🕹️','🧠','🤖','📡','🔋','🪫','💽','💾','🪄','🛰️','🔭','🔬','🧬','📱','⌚','🪙','⚙️','🪩','💡','🎛️','🧩','🧮','🪫','🔌','📶','💾','🪄'],
+  travel: ['✈️','🚗','🚙','🚌','🚎','🚐','🚓','🚑','🚒','🏍️','🚲','🚂','🚆','🚊','🚇','🚉','🚁','🛩️','🛫','🛬','🛳️','⛴️','⚓','🗺️','🧭','🏕️','🏖️','🏝️','🏜️','🏞️','🌄','🌅','🏔️','🗻','🌋','🏰','🕍','🏯','🗽','🗼'],
+  food: ['🍕','🍔','🍟','🌭','🍿','🥓','🥚','🍳','🧇','🥞','🍞','🥐','🥨','🥯','🥖','🥗','🥙','🌮','🌯','🥪','🍖','🍗','🥩','🥘','🍲','🍱','🍙','🍚','🍛','🍜','🍝','🍠','🍣','🍤','🍥','🧁','🍰','🎂','🍩','🍪'],
+  nature: ['🌱','🌿','🍀','🌵','🌴','🌳','🌲','🌺','🌸','🌼','🌷','🌹','💐','🍁','🍂','🍄','🪵','🪨','🌾','🌻','🐚','⛰️','🏔️','🌋','🏕️','🏖️','🏜️','🏝️','🌅','🌄','🐦','🐕','🐈','🐇','🐢','🦋','🐞','🪶','🕊️','🐠'],
+  time: ['⏰','⏱️','⏲️','⏳','⌛','🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚','🕛','🕧','🕜','🕝','🕞','🕟','🕠','🕡','🕢','🕣','🕤','🕥','🕦','🕰️'],
+  emotions: ['😀','😃','😄','😁','😆','🥹','😂','🤣','😊','😇','🙂','😉','😍','🥰','😘','😋','😜','😎','🤩','🤔','😴','😌','😢','😭','😤','😡','😱','🤯','😅','😬','🤗','😇','🙏','🤍','💖','💗','💓','💞','💯','🔥'],
+  symbols: ['✅','❌','⭐','💯','🔥','💡','🎯','📌','🔔','🎉','🎊','🎈','💫','✨','⚡','💥','💬','💭','🗯️','💤','💨','🌀','🎇','🎆','🏆','🥇','🥈','🥉','🎖️','🏅']
+};
+
+
+function initEmojiSelect() {
+    const emojiSelect = document.getElementById('event-emoji-select');
+    if (!emojiSelect) return;
+    
+    emojiSelect.innerHTML = '<option value="">📅</option>';
+    
+    Object.entries(emojiCategories).forEach(([category, emojis]) => {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = category.charAt(0).toUpperCase() + category.slice(1);
+        emojis.forEach(emoji => {
+            const option = document.createElement('option');
+            option.value = emoji;
+            option.textContent = emoji;
+            optgroup.appendChild(option);
+        });
+        emojiSelect.appendChild(optgroup);
+    });
+}
 const COSTS = {
     TEXT_MESSAGE: 0.00099,          
     VOICE_PER_SECOND: 0.0075 / 60,  
@@ -508,6 +542,7 @@ function initChat() {
 
 function initCalendar() {
     generateCalendar();
+    initEmojiSelect();
     document.getElementById('prev-month').addEventListener('click', () => {
         currentMonth--; 
         if (currentMonth < 0) { currentMonth = 11; currentYear--; }
@@ -554,20 +589,36 @@ function generateCalendar() {
                 nextMonthDate++; 
             }
             else{
-                cell.textContent = date;
-                const today = new Date();
-                if(date===today.getDate() && currentMonth===today.getMonth() && currentYear===today.getFullYear()) 
-                    cell.classList.add('today');
-                const dateKey = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
+                const cellDate = date;
+                const dateKey = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(cellDate).padStart(2,'0')}`;
                 
                 const recurringEvents = getRecurringEventsForDate(dateKey);
                 const customEvents = events[dateKey] || [];
-                const hasAnyEvents = recurringEvents.length > 0 || customEvents.length > 0;
+                const allEvents = [...recurringEvents, ...customEvents];
                 
-                if(hasAnyEvents) cell.classList.add('has-events');
+                const dayNumber = document.createElement('div');
+                dayNumber.textContent = cellDate;
+                dayNumber.style.cssText = 'font-size: 0.875rem; margin-bottom: 2px;';
+                cell.appendChild(dayNumber);
                 
-                const currentDate = date;
-                cell.addEventListener('click',()=>openDayView(currentDate));
+                if (allEvents.length > 0) {
+                    const emojisContainer = document.createElement('div');
+                    emojisContainer.style.cssText = 'font-size: 0.75rem; line-height: 1;';
+                    const first3Events = allEvents.slice(0, 3);
+                    const emojis = first3Events.map(event => {
+                        const firstChar = event.title.charAt(0);
+                        return /\p{Emoji}/u.test(firstChar) ? firstChar : '📅';
+                    }).join('');
+                    emojisContainer.textContent = emojis;
+                    cell.appendChild(emojisContainer);
+                    cell.classList.add('has-events');
+                }
+                
+                const today = new Date();
+                if(cellDate===today.getDate() && currentMonth===today.getMonth() && currentYear===today.getFullYear()) 
+                    cell.classList.add('today');
+                
+                cell.addEventListener('click',()=>openDayView(cellDate));
                 date++;
             }
             row.appendChild(cell);
@@ -712,7 +763,10 @@ function loadDayEvents() {
 }
 
 async function saveEvent(){
-    const title = document.getElementById('day-event-title').value.trim();
+    const emojiSelect = document.getElementById('event-emoji-select');
+    const selectedEmoji = emojiSelect.value || '📅';
+    const titleInput = document.getElementById('day-event-title').value.trim();
+    const title = selectedEmoji + ' ' + titleInput;
     const description = document.getElementById('day-event-description').value.trim(); 
     const start = document.getElementById('day-event-start').value;
     const end = document.getElementById('day-event-end').value;
@@ -743,31 +797,39 @@ async function saveEvent(){
 
 
 function editEvent(index){
-    const event=events[selectedDate][index];
-    document.getElementById('day-event-id').value=index;
-    document.getElementById('day-event-title').value=event.title;
-    document.getElementById('day-event-description').value=event.description||'';
-    document.getElementById('day-event-start').value=event.start;
-    document.getElementById('day-event-end').value=event.end;
+    const event = events[selectedDate][index];
+    const titleParts = event.title.match(/^(\S+)\s+(.+)$/);
+    const emoji = titleParts ? titleParts[1] : '📅';
+    const titleText = titleParts ? titleParts[2] : event.title;
+    
+    document.getElementById('event-emoji-select').value = /\p{Emoji}/u.test(emoji) ? emoji : '📅';
+    document.getElementById('day-event-title').value = titleText;
+    document.getElementById('day-event-description').value = event.description || '';
+    document.getElementById('day-event-start').value = event.start;
+    document.getElementById('day-event-end').value = event.end;
+    document.getElementById('day-event-id').value = index;
 }
 
+
 async function deleteEvent(){
-    const eventId=document.getElementById('day-event-id').value;
+    const eventId = document.getElementById('day-event-id').value;
     if(!eventId) return;
-    events[selectedDate].splice(parseInt(eventId),1);
-    if(events[selectedDate].length===0) delete events[selectedDate];
-    
+    events[selectedDate].splice(parseInt(eventId), 1);
+    if(events[selectedDate].length === 0) delete events[selectedDate];
     await syncToServer();
-    loadDayEvents(); 
-    clearEventForm(); 
+    loadDayEvents();
+    clearEventForm();
     generateCalendar();
 }
 
-function clearEventForm(){ 
-    document.getElementById('day-event-form').reset(); 
-    document.getElementById('day-event-id').value=''; 
+function clearEventForm(){
+    document.getElementById('event-emoji-select').value = '';
+    document.getElementById('day-event-title').value = '';
+    document.getElementById('day-event-description').value = '';
+    document.getElementById('day-event-start').value = '';
+    document.getElementById('day-event-end').value = '';
+    document.getElementById('day-event-id').value = '';
 }
-
 function initTasks(){
     const taskForm=document.getElementById('task-form');
     taskForm.addEventListener('submit',e=>{e.preventDefault(); addTask();});
