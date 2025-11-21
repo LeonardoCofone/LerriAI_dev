@@ -412,6 +412,8 @@ button:active {
 }
 
 .monthly-view {
+    overflow-y: auto;
+    scrollbar-width: thin;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -458,6 +460,8 @@ button:active {
 }
 
 #calendar-grid {
+    overflow-y: auto;
+    scrollbar-width: thin;
     width: 100%;
     flex: 1;
     display: flex;
@@ -497,6 +501,8 @@ button:active {
 }
 
 #calendar-grid td {
+    overflow-y: auto;
+    scrollbar-width: thin;
     padding: 0.5rem;
     text-align: left;
     vertical-align: top;
