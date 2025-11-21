@@ -380,7 +380,7 @@ function initChat() {
                 };
 
                 mediaRecorder.onstop = async () => {
-                    chatInput.placeholder = 'Scrivi un messaggio...';
+                    chatInput.placeholder = 'Write a message...';
                     chatInput.disabled = false;
                     
                     const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
@@ -414,10 +414,19 @@ function initChat() {
                             
                             if (!response.ok) throw new Error(await response.text());
                             const data = await response.json();
-                            const replyText = data.value || data;
+                            
+                            const transcribedText = data.transcription || '';
+                            const aiReply = data.value || data.reply || '';
                             
                             transcribingMsg.remove();
-                            addMessage(replyText, 'user', true, audioBlob, true);
+                            
+                            if (transcribedText) {
+                                addMessage(transcribedText, 'user', true, audioBlob, true);
+                            }
+                            
+                            if (aiReply) {
+                                addMessage(aiReply, 'bot', true, null, true);
+                            }
 
                             settings.stats.messages++;
                             settings.stats.voiceMessages = (settings.stats.voiceMessages || 0) + 1;
@@ -425,7 +434,7 @@ function initChat() {
                             settings.currentSpend += voiceCost;
                             settings.currentSpend = Math.round(settings.currentSpend * 100000) / 100000;
 
-                            console.log(`💰 Costo vocale: €${voiceCost.toFixed(5)} (${durationSeconds}s)`);
+                            console.log(`💰 Voice cost: €${voiceCost.toFixed(5)} (${durationSeconds}s)`);
 
                             if (data.events) events = data.events;
                             if (data.tasks) tasks = data.tasks;
