@@ -416,42 +416,7 @@ button:active {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    height: 100%;
-}
-
-
-.calendar-view {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    height: 100%;
-}
-
-.calendar-day {
-    background-color: var(--color-surface);
-    min-height: 100px; /* Altezza minima per non schiacciare */
-    padding: 0.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.calendar-day:hover {
-    background-color: #f8fafc;
-}
-
-.calendar-day.today {
-    background-color: #e0e7ff;
-    border-top: 3px solid var(--color-primary);
-}
-
-/* Giorni vuoti (mese precedente/successivo) */
-.calendar-day.empty {
-    background-color: #f1f5f9;
-    cursor: default;
+    min-height: 0;
 }
 
 .calendar-header {
@@ -488,45 +453,27 @@ button:active {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 0;
     min-height: 0;
-    overflow: auto;
-    height: 100%;
+    overflow: hidden;
 }
 
 #calendar-grid {
-    display: grid;
-    height: 100%;
-    border-collapse: collapse;
-    grid-template-columns: repeat(7, 1fr); /* 7 colonne uguali */
-    gap: 1px; /* Crea le linee della griglia */
-    background-color: var(--color-border); /* Colore delle linee */
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
-    overflow: hidden;
     width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 #calendar-grid table {
     width: 100%;
     height: 100%;
+    border-collapse: collapse;
     table-layout: fixed;
 }
 
 #calendar-grid thead {
     background: var(--color-background);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.calendar-header-cell {
-    background-color: var(--color-background);
-    color: var(--color-text);
-    font-weight: 600;
-    padding: 0.75rem 0.25rem;
-    text-align: center;
-    font-size: 0.9rem;
 }
 
 #calendar-grid th {
@@ -537,8 +484,16 @@ button:active {
     font-size: 0.875rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 2px solid var(--color-border);
+    border: 1px solid var(--color-border);
     background: var(--color-background);
+}
+
+#calendar-grid tbody {
+    height: 100%;
+}
+
+#calendar-grid tr {
+    height: calc(100% / 6);
 }
 
 #calendar-grid td {
@@ -550,23 +505,12 @@ button:active {
     cursor: pointer;
     transition: var(--transition);
     position: relative;
+    height: auto;
 }
-
-#calendar-grid tbody {
-    height: 100%;
-    display: table-row-group;
-    height: calc(100% - 50px);
-}
-
-#calendar-grid tr {
-    height: 16.666%;
-}
-
 
 #calendar-grid td:hover {
     background: rgba(99, 102, 241, 0.05);
     border-color: var(--color-primary);
-    transform: scale(1.01);
 }
 
 #calendar-grid td.today {
@@ -591,13 +535,6 @@ button:active {
     opacity: 0.3;
     pointer-events: none;
     background: var(--color-background);
-}
-
-#calendar-grid td .day-number {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    display: block;
 }
 
 #calendar-grid td .events-preview {
