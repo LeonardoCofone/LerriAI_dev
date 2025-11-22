@@ -33,20 +33,50 @@ function initEmojiSelect() {
     const emojiSelect = document.getElementById('event-emoji-select');
     if (!emojiSelect) return;
     
-    emojiSelect.innerHTML = '<option value="">📅</option>';
+    const dropdown = document.createElement('div');
+    dropdown.className = 'emoji-dropdown';
     
     Object.entries(emojiCategories).forEach(([category, emojis]) => {
-        const optgroup = document.createElement('optgroup');
-        optgroup.label = category.charAt(0).toUpperCase() + category.slice(1);
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'emoji-category';
+        
+        const title = document.createElement('div');
+        title.className = 'emoji-category-title';
+        title.textContent = category;
+        categoryDiv.appendChild(title);
+        
+        const grid = document.createElement('div');
+        grid.className = 'emoji-grid';
+        
         emojis.forEach(emoji => {
-            const option = document.createElement('option');
-            option.value = emoji;
+            const option = document.createElement('span');
+            option.className = 'emoji-option';
             option.textContent = emoji;
-            optgroup.appendChild(option);
+            option.addEventListener('click', () => {
+                emojiSelect.textContent = emoji;
+                emojiSelect.value = emoji;
+                dropdown.classList.remove('active');
+            });
+            grid.appendChild(option);
         });
-        emojiSelect.appendChild(optgroup);
+        
+        categoryDiv.appendChild(grid);
+        dropdown.appendChild(categoryDiv);
+    });
+    
+    emojiSelect.parentElement.style.position = 'relative';
+    emojiSelect.parentElement.appendChild(dropdown);
+    
+    emojiSelect.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle('active');
+    });
+    
+    document.addEventListener('click', () => {
+        dropdown.classList.remove('active');
     });
 }
+
 const COSTS = {
     TEXT_MESSAGE: 0.00099,          
     VOICE_PER_SECOND: 0.0075 / 60,  
@@ -246,7 +276,7 @@ async function loadDataFromServer() {
             };
         }
 
-        console.log('📅 Schedule loaded:', {
+        console.log('🕒 Schedule loaded:', {
             slots: settings.schedule.slots.length,
             categories: settings.schedule.categories.length,
             sports: settings.schedule.sports.length,
@@ -713,7 +743,7 @@ function generateCalendar() {
                         dot.className = 'event-dot';
                         
                         const match = event.title.match(/^(\p{Emoji})/u);
-                        dot.textContent = match ? match[1] : '📅';
+                        dot.textContent = match ? match[1] : '🕒';
                         
                         eventsPreview.appendChild(dot);
                     });
@@ -880,7 +910,7 @@ async function saveEvent() {
     const endInput = document.getElementById('day-event-end');
     const eventIdInput = document.getElementById('day-event-id');
     
-    const selectedEmoji = emojiSelect.value || '📅';
+    const selectedEmoji = emojiSelect.value || '🕒';
     const titleText = titleInput.value.trim();
     
     if (!titleText) {
@@ -924,7 +954,7 @@ function editEvent(index) {
     const event = events[selectedDate][index];
     
     const emojiMatch = event.title.match(/^(\p{Emoji}+)\s/u);
-    const emoji = emojiMatch ? emojiMatch[1] : '📅';
+    const emoji = emojiMatch ? emojiMatch[1] : '🕒';
     const titleText = emojiMatch ? event.title.substring(emoji.length).trim() : event.title;
     
     document.getElementById('event-emoji-select').value = emoji;
@@ -947,7 +977,7 @@ async function deleteEvent(){
 }
 
 function clearEventForm() {
-    document.getElementById('event-emoji-select').value = '📅';
+    document.getElementById('event-emoji-select').value = '🕒';
     document.getElementById('day-event-title').value = '';
     document.getElementById('day-event-description').value = '';
     document.getElementById('day-event-start').value = '';

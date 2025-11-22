@@ -44,7 +44,7 @@ let dragStartY = 0;
 let isResizing = false;
 let selectedSlots = new Set();
 let currentEditingSlot = null;
-let selectedSlotEmoji = '📅';
+let selectedSlotEmoji = '🕒';
 
 function timeToPixels(timeStr) {
     const [hours, minutes] = timeStr.split(':').map(Number);
@@ -429,7 +429,7 @@ function openSlotEditor(slot) {
 
                 <div class="form-row emoji-picker-modal-wrapper">
                     <label>Emoji / Icon</label>
-                    <div class="emoji-selected-preview">Selected: <span id="selectedEmojiPreview">${slot.emoji || selectedSlotEmoji || '📅'}</span></div>
+                    <div class="emoji-selected-preview">Selected: <span id="selectedEmojiPreview">${slot.emoji || selectedSlotEmoji || '🕒'}</span></div>
 
                     <div class="emoji-picker-controls">
                         <div class="emoji-cat-tabs">${categoriesHtml}</div>
@@ -464,7 +464,7 @@ function openSlotEditor(slot) {
     document.body.classList.add('modal-open');
 
     // set initial selected emoji variable and preview
-    selectedSlotEmoji = slot.emoji || selectedSlotEmoji || '📅';
+    selectedSlotEmoji = slot.emoji || selectedSlotEmoji || '🕒';
     const preview = modal.querySelector('#selectedEmojiPreview');
     if (preview) preview.textContent = selectedSlotEmoji;
 
