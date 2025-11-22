@@ -84,18 +84,24 @@ function calculateMessageCost(isVoice = false, durationSeconds = 0) {
 }
 
 function makeLinksClickable(text) {
-    const urlRegex = /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g;
+    const urlRegex = /(https?:\/\/[^\s<>"']+)/g;
     return text.replace(urlRegex, (url) => {
-        return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+        const cleanUrl = url.replace(/[.,;:!?)]$/, '');
+        return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl}</a>`;
     });
 }
 
 function normalizeMarkdown(text) {
     if (!text) return '';
     text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+    
+    text = text.replace(/_{2,}/g, '');
+    text = text.replace(/\*{2,}/g, '');
+    
     text = text.replace(/^```(\w+)?\n/gm, '\n```$1\n');
     text = text.replace(/\n```$/gm, '\n```\n');
     text = text.replace(/\n{3,}/g, '\n\n');
+    
     return text;
 }
 
@@ -117,21 +123,24 @@ function addMessage(text, sender, save = true, audioBlob = null, skipSync = fals
     }
     
     const textDiv = document.createElement('div');
-    const normalizedText = normalizeMarkdown(text);
+    
+    const cleanText = text
+        .replace(/_{2,}/g, '')
+        .replace(/\*{3,}/g, '**')
+        .replace(/__(\S)/g, '$1')
+        .replace(/(\S)__/g, '$1');
+    
+    const normalizedText = normalizeMarkdown(cleanText);
     const renderedHtml = md.render(normalizedText);
+    
     const sanitizedHtml = DOMPurify.sanitize(renderedHtml, {
-        ADD_ATTR: ['target', 'rel']
-    });
-    const htmlWithLinks = makeLinksClickable(sanitizedHtml);
-    textDiv.innerHTML = htmlWithLinks;
-    
-    textDiv.querySelectorAll('a').forEach(link => {
-        if (!link.hasAttribute('target')) {
-            link.setAttribute('target', '_blank');
-            link.setAttribute('rel', 'noopener noreferrer');
-        }
+        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'code', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote'],
+        ALLOWED_ATTR: ['href', 'target', 'rel']
     });
     
+    const finalHtml = sanitizedHtml.replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" ');
+    
+    textDiv.innerHTML = finalHtml;
     msgEl.appendChild(textDiv);
     messagesContainer.appendChild(msgEl);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -589,6 +598,61 @@ function initCalendar() {
     });
     
     document.getElementById('delete-day-event').addEventListener('click', deleteEvent);
+
+    document.getElementById('import-google-calendar').addEventListener('click', importFromGoogleCalendar);
+
+    async function importFromGoogleCalendar() {
+        const email = getUserEmail();
+        if (!email) {
+            showNotification('Please login first', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('import-google-calendar');
+        const originalText = btn.textContent;
+        btn.textContent = '⏳';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('http://localhost:3000/api/import-google-calendar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+
+            if (response.status === 401) {
+                const data = await response.json();
+                if (data.needsReauth) {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                    showNotification('Authorization expired. Please reconnect your Google account.', 'error');
+                    addReauthButton();
+                    return;
+                }
+            }
+
+            if (!response.ok) {
+                throw new Error('Import failed');
+            }
+
+            const data = await response.json();
+            
+            events = data.events;
+            settings.stats = data.stats;
+            
+            generateCalendar();
+            updateStats();
+            
+            showNotification(`✅ Imported ${data.importedCount} events from Google Calendar`, 'success');
+
+        } catch (error) {
+            console.error('Import error:', error);
+            showNotification('❌ Failed to import events. Try again.', 'error');
+        } finally {
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
+    }
 }
 
 function generateCalendar() {
