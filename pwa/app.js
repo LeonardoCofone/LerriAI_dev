@@ -887,7 +887,7 @@ function loadDayEvents() {
     
     recurringEvents.forEach((event) => {
         const li = document.createElement('li');
-        const description = event.description ? `<br><small style="color: rgba(0, 0, 0, 0);">${event.description}</small>` : '';
+        const description = event.description ? `<br><small style="color: #64748b;">${event.description}</small>` : '';
         li.innerHTML = `<div><strong>${event.title}</strong> <span style="background: rgba(102, 126, 234, 0.2); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; margin-left: 8px;">Recurring</span><br><small>${event.start} - ${event.end}</small>${description}</div>`;
         li.style.opacity = '0.85';
         eventList.appendChild(li);
@@ -895,7 +895,7 @@ function loadDayEvents() {
     
     customEvents.forEach((event, index) => {
         const li = document.createElement('li');
-        const description = event.description ? `<br><small style="color: rgba(0, 0, 0, 0);">${event.description}</small>` : '';
+        const description = event.description ? `<br><small style="color: #64748b;">${event.description}</small>` : '';
         li.innerHTML = `<div><strong>${event.title}</strong><br><small>${event.start} - ${event.end}</small>${description}</div>
                         <button onclick="editEvent(${index})" class="btn-secondary">Edit</button>`;
         eventList.appendChild(li);

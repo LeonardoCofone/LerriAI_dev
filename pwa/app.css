@@ -264,6 +264,14 @@ main {
     color: white;
 }
 
+.message small {
+    color: var(--color-text-light);
+}
+
+.message.bot small {
+    color: var(--color-text-light);
+}
+
 .message audio {
     max-width: 100%;
     height: 32px;
