@@ -17,23 +17,33 @@ function initDailyBriefingButton() {
     const chatHeaderBar = document.querySelector('.chat-header-bar');
     if (!chatHeaderBar) return;
 
-    // Crea pulsante briefing
+    const briefingWrapper = document.createElement('div');
+    briefingWrapper.style.display = 'inline-flex';
+    briefingWrapper.style.alignItems = 'center';
+    briefingWrapper.style.gap = '4px';
+
     const briefingBtn = document.createElement('button');
     briefingBtn.id = 'daily-briefing-btn';
     briefingBtn.className = 'btn-icon';
     briefingBtn.setAttribute('aria-label', 'Daily Briefing');
     briefingBtn.innerHTML = '📊';
     briefingBtn.title = 'Get Daily Briefing';
-    
-    // Inserisci prima del pulsante clear chat
+
+    const infoIcon = document.createElement('span');
+    infoIcon.innerHTML = 'ℹ️';
+    infoIcon.style.cursor = 'pointer';
+    infoIcon.title = 'Click this button to generate your daily briefing, including today’s events, tomorrow’s events, week events, and pending tasks.';
+
+    briefingWrapper.appendChild(briefingBtn);
+    briefingWrapper.appendChild(infoIcon);
+
     const clearBtn = document.getElementById('clear-chat-btn');
     if (clearBtn) {
-        chatHeaderBar.insertBefore(briefingBtn, clearBtn);
+        chatHeaderBar.insertBefore(briefingWrapper, clearBtn);
     } else {
-        chatHeaderBar.appendChild(briefingBtn);
+        chatHeaderBar.appendChild(briefingWrapper);
     }
 
-    // Handler click
     briefingBtn.addEventListener('click', async () => {
         const email = getUserEmail();
         if (!email) {
@@ -41,12 +51,10 @@ function initDailyBriefingButton() {
             return;
         }
 
-        // Disabilita pulsante durante caricamento
         briefingBtn.disabled = true;
         briefingBtn.innerHTML = '⏳';
 
         try {
-            // Mostra messaggio "caricamento" nella chat
             const loadingMsg = addMessage('📊 Generating your daily briefing...', 'bot', false);
 
             const response = await fetch('http://localhost:3000/api/trigger-briefing', {
@@ -61,16 +69,10 @@ function initDailyBriefingButton() {
 
             const data = await response.json();
 
-            // Rimuovi messaggio di caricamento
             loadingMsg.remove();
-
-            // Aggiungi domanda utente
             addMessage('Tell me my day', 'user', false);
-
-            // Aggiungi briefing
             addMessage(data.briefing, 'bot', false);
 
-            // Aggiorna messagesArray localmente
             messagesArray.push({ text: 'Tell me my day', sender: 'user' });
             messagesArray.push({ text: data.briefing, sender: 'bot' });
             if (messagesArray.length > 25) {
@@ -82,13 +84,13 @@ function initDailyBriefingButton() {
         } catch (error) {
             console.error('Briefing error:', error);
             showNotification('❌ Failed to generate briefing. Try again.', 'error');
-        } finally {
-            // Riabilita pulsante
+        } finally { 
             briefingBtn.disabled = false;
             briefingBtn.innerHTML = '📊';
         }
     });
 }
+
 
 function initEmojiSelect() {
     const emojiSelect = document.getElementById('event-emoji-select');
