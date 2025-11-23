@@ -13,6 +13,83 @@ const LANGUAGES = {
     "ar": "العربية"
 };
 
+function initDailyBriefingButton() {
+    const chatHeaderBar = document.querySelector('.chat-header-bar');
+    if (!chatHeaderBar) return;
+
+    // Crea pulsante briefing
+    const briefingBtn = document.createElement('button');
+    briefingBtn.id = 'daily-briefing-btn';
+    briefingBtn.className = 'btn-icon';
+    briefingBtn.setAttribute('aria-label', 'Daily Briefing');
+    briefingBtn.innerHTML = '📊';
+    briefingBtn.title = 'Get Daily Briefing';
+    
+    // Inserisci prima del pulsante clear chat
+    const clearBtn = document.getElementById('clear-chat-btn');
+    if (clearBtn) {
+        chatHeaderBar.insertBefore(briefingBtn, clearBtn);
+    } else {
+        chatHeaderBar.appendChild(briefingBtn);
+    }
+
+    // Handler click
+    briefingBtn.addEventListener('click', async () => {
+        const email = getUserEmail();
+        if (!email) {
+            showNotification('❌ Please login first', 'error');
+            return;
+        }
+
+        // Disabilita pulsante durante caricamento
+        briefingBtn.disabled = true;
+        briefingBtn.innerHTML = '⏳';
+
+        try {
+            // Mostra messaggio "caricamento" nella chat
+            const loadingMsg = addMessage('📊 Generating your daily briefing...', 'bot', false);
+
+            const response = await fetch('http://localhost:3000/api/trigger-briefing', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+
+            if (!response.ok) {
+                throw new Error('Briefing generation failed');
+            }
+
+            const data = await response.json();
+
+            // Rimuovi messaggio di caricamento
+            loadingMsg.remove();
+
+            // Aggiungi domanda utente
+            addMessage('Tell me my day', 'user', false);
+
+            // Aggiungi briefing
+            addMessage(data.briefing, 'bot', false);
+
+            // Aggiorna messagesArray localmente
+            messagesArray.push({ text: 'Tell me my day', sender: 'user' });
+            messagesArray.push({ text: data.briefing, sender: 'bot' });
+            if (messagesArray.length > 25) {
+                messagesArray = messagesArray.slice(-25);
+            }
+
+            showNotification('✅ Daily briefing generated!', 'success');
+
+        } catch (error) {
+            console.error('Briefing error:', error);
+            showNotification('❌ Failed to generate briefing. Try again.', 'error');
+        } finally {
+            // Riabilita pulsante
+            briefingBtn.disabled = false;
+            briefingBtn.innerHTML = '📊';
+        }
+    });
+}
+
 function initEmojiSelect() {
     const emojiSelect = document.getElementById('event-emoji-select');
     if (!emojiSelect) return;
@@ -583,6 +660,7 @@ function initChat() {
             console.error("Chat error:", error);
         }
     });
+    initDailyBriefingButton();
 }
 
 function initCalendar() {
