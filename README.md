@@ -72,6 +72,8 @@ LerriAI/
 │   ├── pwa/  
 │   │   ├── index.html  
 │   │   ├── app.js  
+│   │   ├── schedule-manager.js  
+│   │   ├── schedule-manager.css  
 │   │   ├── app.css  
 │   │   ├── manifest.json  
 │   │   ├── sw.js  
