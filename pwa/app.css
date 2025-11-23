@@ -381,7 +381,7 @@ button:active {
 }
 
 .btn-primary {
-    padding-top: 5px;
+    padding-top: 10px;
     background: var(--color-primary);
 }
 
