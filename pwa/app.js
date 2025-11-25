@@ -44,7 +44,7 @@ function initDailyBriefingButton() {
     tooltip.textContent = 'Click this button to generate your daily briefing, including today\'s events, tomorrow\'s events, week events, and pending tasks.';
     tooltip.style.cssText = `
         position: absolute;
-        bottom: 120%;
+        top: 120%;
         left: 50%;
         transform: translateX(-50%);
         background: #2d3748;
@@ -86,8 +86,8 @@ function initDailyBriefingButton() {
     infoWrapper.appendChild(infoIcon);
     infoWrapper.appendChild(tooltip);
 
-    briefingWrapper.appendChild(briefingBtn);
     briefingWrapper.appendChild(infoWrapper);
+    briefingWrapper.appendChild(briefingBtn);
 
     const clearBtn = document.getElementById('clear-chat-btn');
     if (clearBtn) {
