@@ -477,6 +477,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     initDeleteAccount();
     initLogout();
     initClearChat();
+    
+    initPWAPrompt();
 });
 
 function initTabs() {
@@ -1528,5 +1530,338 @@ async function handleReauth() {
     } catch (error) {
         console.error('Reauth error:', error);
         showNotification('❌ Error during authorization renewal', 'error');
+    }
+}
+
+function checkPWAInstallation() {
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+        return true;
+    }
+    return localStorage.getItem('pwa-installed') === 'true';
+}
+
+function initPWAPrompt() {
+    if (checkPWAInstallation()) {
+        console.log('✅ PWA already installed');
+        initNotificationPrompt();
+        return;
+    }
+
+    if (localStorage.getItem('pwa-prompt-dismissed') === 'true') {
+        return;
+    }
+
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        showPWAInstallBanner(deferredPrompt);
+    });
+
+    window.addEventListener('appinstalled', () => {
+        localStorage.setItem('pwa-installed', 'true');
+        hidePWAInstallBanner();
+        console.log('✅ PWA installed successfully');
+        setTimeout(() => {
+            initNotificationPrompt();
+        }, 1000);
+    });
+
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+        localStorage.setItem('pwa-installed', 'true');
+        initNotificationPrompt();
+    }
+}
+
+function showPWAInstallBanner(deferredPrompt) {
+    const banner = document.createElement('div');
+    banner.id = 'pwa-install-banner';
+    banner.innerHTML = `
+        <div class="pwa-banner-content">
+            <div class="pwa-banner-icon">📱</div>
+            <div class="pwa-banner-text">
+                <h3>Install LerriAI</h3>
+                <p>Get the best experience by installing our app on your device!</p>
+            </div>
+            <div class="pwa-banner-actions">
+                <button id="pwa-install-btn" class="btn-primary">Install</button>
+                <button id="pwa-dismiss-btn" class="btn-secondary">Not now</button>
+            </div>
+        </div>
+    `;
+
+    banner.style.cssText = `
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        z-index: 10000;
+        padding: 20px;
+        animation: slideUp 0.3s ease-out;
+    `;
+
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        
+        .pwa-banner-content {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .pwa-banner-icon {
+            font-size: 3rem;
+            flex-shrink: 0;
+        }
+        
+        .pwa-banner-text {
+            flex: 1;
+        }
+        
+        .pwa-banner-text h3 {
+            margin: 0 0 5px 0;
+            font-size: 1.2rem;
+            color: #2d3748;
+        }
+        
+        .pwa-banner-text p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+        
+        .pwa-banner-actions {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        
+        .pwa-banner-actions button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .pwa-banner-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .pwa-banner-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+            
+            .pwa-banner-actions button {
+                width: 100%;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+    document.body.appendChild(banner);
+
+    document.getElementById('pwa-install-btn').addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+
+        if (outcome === 'accepted') {
+            console.log('✅ User accepted PWA install');
+            localStorage.setItem('pwa-installed', 'true');
+        } else {
+            console.log('❌ User dismissed PWA install');
+            localStorage.setItem('pwa-prompt-dismissed', 'true');
+        }
+
+        hidePWAInstallBanner();
+        deferredPrompt = null;
+
+        if (outcome === 'accepted') {
+            setTimeout(() => {
+                initNotificationPrompt();
+            }, 1000);
+        }
+    });
+
+    document.getElementById('pwa-dismiss-btn').addEventListener('click', () => {
+        localStorage.setItem('pwa-prompt-dismissed', 'true');
+        hidePWAInstallBanner();
+    });
+}
+
+function hidePWAInstallBanner() {
+    const banner = document.getElementById('pwa-install-banner');
+    if (banner) {
+        banner.style.animation = 'slideDown 0.3s ease-out';
+        setTimeout(() => banner.remove(), 300);
+    }
+}
+
+function initNotificationPrompt() {
+    if (!('Notification' in window)) {
+        console.log('❌ Notifications not supported');
+        return;
+    }
+
+    if (Notification.permission === 'granted') {
+        console.log('✅ Notifications already granted');
+        return;
+    }
+
+    if (Notification.permission === 'denied') {
+        console.log('❌ Notifications denied');
+        return;
+    }
+
+    if (localStorage.getItem('notification-prompt-dismissed') === 'true') {
+        return;
+    }
+
+    setTimeout(() => {
+        showNotificationPrompt();
+    }, 500);
+}
+
+function showNotificationPrompt() {
+    const modal = document.createElement('div');
+    modal.id = 'notification-modal';
+    modal.innerHTML = `
+        <div class="notification-modal-overlay">
+            <div class="notification-modal-content">
+                <div class="notification-modal-icon">🔔</div>
+                <h3>Enable Notifications</h3>
+                <p><strong>HIGHLY RECOMMENDED!</strong></p>
+                <p>Get daily briefings, task reminders, and important updates automatically.</p>
+                <div class="notification-modal-actions">
+                    <button id="notification-enable-btn" class="btn-primary">Enable Notifications</button>
+                    <button id="notification-dismiss-btn" class="btn-secondary">Maybe Later</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10001;
+        animation: fadeIn 0.3s ease-out;
+    `;
+
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .notification-modal-overlay {
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .notification-modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        .notification-modal-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+        
+        .notification-modal-content h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.5rem;
+            color: #2d3748;
+        }
+        
+        .notification-modal-content p {
+            margin: 10px 0;
+            font-size: 1rem;
+            color: #64748b;
+            line-height: 1.5;
+        }
+        
+        .notification-modal-content p strong {
+            color: #667eea;
+            font-weight: 700;
+        }
+        
+        .notification-modal-actions {
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .notification-modal-actions button {
+            width: 100%;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+    `;
+    document.head.appendChild(style);
+    document.body.appendChild(modal);
+
+    document.getElementById('notification-enable-btn').addEventListener('click', async () => {
+        try {
+            const permission = await Notification.requestPermission();
+            
+            if (permission === 'granted') {
+                console.log('✅ Notifications enabled');
+                showNotification('🔔 Notifications enabled! You will receive daily briefings and reminders.', 'success');
+            } else {
+                console.log('❌ Notifications denied');
+                showNotification('Notifications blocked. You can enable them later in settings.', 'info');
+            }
+        } catch (error) {
+            console.error('Notification error:', error);
+        }
+        
+        hideNotificationPrompt();
+    });
+
+    document.getElementById('notification-dismiss-btn').addEventListener('click', () => {
+        localStorage.setItem('notification-prompt-dismissed', 'true');
+        hideNotificationPrompt();
+    });
+}
+
+function hideNotificationPrompt() {
+    const modal = document.getElementById('notification-modal');
+    if (modal) {
+        modal.style.animation = 'fadeOut 0.3s ease-out';
+        setTimeout(() => modal.remove(), 300);
     }
 }

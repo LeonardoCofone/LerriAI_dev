@@ -394,6 +394,16 @@ button:active {
     }
 }
 
+@keyframes slideDown {
+    from { transform: translateY(0); }
+    to { transform: translateY(100%); }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
 .btn-primary {
     padding-top: 10px;
     background: var(--color-primary);
