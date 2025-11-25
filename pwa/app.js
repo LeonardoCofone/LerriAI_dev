@@ -20,7 +20,7 @@ function initDailyBriefingButton() {
     const briefingWrapper = document.createElement('div');
     briefingWrapper.style.display = 'inline-flex';
     briefingWrapper.style.alignItems = 'center';
-    briefingWrapper.style.gap = '4px';
+    briefingWrapper.style.gap = '8px';
 
     const briefingBtn = document.createElement('button');
     briefingBtn.id = 'daily-briefing-btn';
@@ -29,13 +29,65 @@ function initDailyBriefingButton() {
     briefingBtn.innerHTML = '📊';
     briefingBtn.title = 'Get Daily Briefing';
 
+    const infoWrapper = document.createElement('div');
+    infoWrapper.style.position = 'relative';
+    infoWrapper.style.display = 'inline-flex';
+    infoWrapper.style.alignItems = 'center';
+
     const infoIcon = document.createElement('span');
     infoIcon.innerHTML = 'ℹ️';
     infoIcon.style.cursor = 'pointer';
-    infoIcon.title = 'Click this button to generate your daily briefing, including today’s events, tomorrow’s events, week events, and pending tasks.';
+    infoIcon.style.fontSize = '1.2rem';
+
+    const tooltip = document.createElement('div');
+    tooltip.className = 'info-tooltip';
+    tooltip.textContent = 'Click this button to generate your daily briefing, including today\'s events, tomorrow\'s events, week events, and pending tasks.';
+    tooltip.style.cssText = `
+        position: absolute;
+        bottom: 120%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #2d3748;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        width: 220px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+        z-index: 1000;
+        text-align: center;
+        line-height: 1.4;
+    `;
+
+    const tooltipArrow = document.createElement('div');
+    tooltipArrow.style.cssText = `
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 6px solid #2d3748;
+    `;
+    tooltip.appendChild(tooltipArrow);
+
+    infoIcon.addEventListener('mouseenter', () => {
+        tooltip.style.opacity = '1';
+    });
+
+    infoIcon.addEventListener('mouseleave', () => {
+        tooltip.style.opacity = '0';
+    });
+
+    infoWrapper.appendChild(infoIcon);
+    infoWrapper.appendChild(tooltip);
 
     briefingWrapper.appendChild(briefingBtn);
-    briefingWrapper.appendChild(infoIcon);
+    briefingWrapper.appendChild(infoWrapper);
 
     const clearBtn = document.getElementById('clear-chat-btn');
     if (clearBtn) {
@@ -48,6 +100,14 @@ function initDailyBriefingButton() {
         const email = getUserEmail();
         if (!email) {
             showNotification('❌ Please login first', 'error');
+            return;
+        }
+
+        const briefingCost = COSTS.TEXT_MESSAGE;
+
+        if (settings.currentSpend + briefingCost > settings.maxSpend) {
+            showNotification('⚠️ Budget limit reached! Increase your maximum budget to continue.', 'error');
+            addMessage('⚠️ You have reached your monthly spending limit. Increase your budget in your settings to continue.', 'bot', false);
             return;
         }
 
@@ -78,6 +138,16 @@ function initDailyBriefingButton() {
             if (messagesArray.length > 25) {
                 messagesArray = messagesArray.slice(-25);
             }
+
+            settings.stats.messages++;
+            settings.currentSpend += briefingCost;
+            settings.currentSpend = Math.round(settings.currentSpend * 100000) / 100000;
+
+            console.log(`💰 Briefing cost: €${briefingCost.toFixed(5)}`);
+
+            await syncToServer();
+            updateStats();
+            updateBudgetDisplay();
 
             showNotification('✅ Daily briefing generated!', 'success');
 
