@@ -1711,7 +1711,7 @@ function hidePWAInstallBanner() {
     }
 }
 
-function initNotificationPrompt() {
+async function initNotificationPrompt() {
     if (!('Notification' in window)) {
         console.log('❌ Notifications not supported');
         return;
@@ -1731,12 +1731,14 @@ function initNotificationPrompt() {
         return;
     }
 
+    await loadVapidKey();
+
     setTimeout(() => {
         showNotificationPrompt();
     }, 500);
 }
 
-const VAPID_PUBLIC_KEY = 'YOUR_PUBLIC_KEY_HERE';
+const VAPID_PUBLIC_KEY = 'GR8PSUhEMD5Jij2vMHJamrLlnPZAi26RDhWCRLYKr0J_Cl2L7pZjgbqTHxKqzqU4bMYLNibnl4ltPQzIFkr0-c';
 
 async function subscribeUserToPush() {
     try {
@@ -1797,9 +1799,97 @@ function showNotificationPrompt() {
         </div>
     `;
 
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10001;
+        animation: fadeIn 0.3s ease-out;
+    `;
+
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        .notification-modal-overlay {
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .notification-modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        .notification-modal-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+        
+        .notification-modal-content h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.5rem;
+            color: #2d3748;
+        }
+        
+        .notification-modal-content p {
+            margin: 10px 0;
+            font-size: 1rem;
+            color: #64748b;
+            line-height: 1.5;
+        }
+        
+        .notification-modal-content p strong {
+            color: #667eea;
+            font-weight: 700;
+        }
+        
+        .notification-modal-actions {
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .notification-modal-actions button {
+            width: 100%;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+    `;
+    document.head.appendChild(style);
     document.body.appendChild(modal);
 
     document.getElementById('notification-enable-btn').addEventListener('click', async () => {
+        const btn = document.getElementById('notification-enable-btn');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '⏳ Enabling...';
+        
         try {
             const permission = await Notification.requestPermission();
             
@@ -1807,10 +1897,19 @@ function showNotificationPrompt() {
                 const subscribed = await subscribeUserToPush();
                 if (subscribed) {
                     showNotification('🔔 Notifications enabled! You will receive daily briefings.', 'success');
+                    localStorage.setItem('notifications-enabled', 'true');
+                } else {
+                    showNotification('❌ Failed to subscribe to notifications', 'error');
                 }
+            } else {
+                showNotification('Notifications blocked. You can enable them later in settings.', 'info');
             }
         } catch (error) {
             console.error('Notification error:', error);
+            showNotification('❌ Error enabling notifications', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
         }
         
         hideNotificationPrompt();
@@ -1826,6 +1925,10 @@ function hideNotificationPrompt() {
     const modal = document.getElementById('notification-modal');
     if (modal) {
         modal.style.animation = 'fadeOut 0.3s ease-out';
-        setTimeout(() => modal.remove(), 300);
+        setTimeout(() => {
+            if (document.body.contains(modal)) {
+                document.body.removeChild(modal);
+            }
+        }, 300);
     }
 }
