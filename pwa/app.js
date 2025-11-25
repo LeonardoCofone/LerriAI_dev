@@ -1582,7 +1582,7 @@ function showPWAInstallBanner(deferredPrompt) {
             <div class="pwa-banner-icon">📱</div>
             <div class="pwa-banner-text">
                 <h3>Install LerriAI</h3>
-                <p>Get the best experience by installing our app on your device!</p>
+                <p>Get the best experience by installing our app on your device!, It's very light ;)</p>
             </div>
             <div class="pwa-banner-actions">
                 <button id="pwa-install-btn" class="btn-primary">Install</button>
@@ -1711,7 +1711,7 @@ function hidePWAInstallBanner() {
     }
 }
 
-async function initNotificationPrompt() {
+function initNotificationPrompt() {
     if (!('Notification' in window)) {
         console.log('❌ Notifications not supported');
         return;
@@ -1730,8 +1730,6 @@ async function initNotificationPrompt() {
     if (localStorage.getItem('notification-prompt-dismissed') === 'true') {
         return;
     }
-
-    await loadVapidKey();
 
     setTimeout(() => {
         showNotificationPrompt();
