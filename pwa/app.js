@@ -285,7 +285,7 @@ function addMessage(text, sender, save = true, audioBlob = null, skipSync = fals
         audioPlayer.style.maxWidth = '100%';
         audioPlayer.style.marginBottom = '8px';
         msgEl.appendChild(audioPlayer);
-    }
+    }   
     
     const textDiv = document.createElement('div');
     
