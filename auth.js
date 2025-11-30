@@ -260,21 +260,16 @@ if (document.getElementById("loginForm")) {
                 const response = await fetch(`http://localhost:3000/api/check-onboarding?email=${encodeURIComponent(email)}`);
                 const onboardingStatus = await response.json();
                 
-                console.log("📊 Onboarding status:", onboardingStatus);
-                
                 if (onboardingStatus.completed) {
-                    console.log("✅ User has events, going to PWA");
                     setTimeout(() => {
                         window.location.href = "pwa/index.html";
                     }, 1000);
                 } else {
-                    console.log("📝 User needs onboarding");
                     setTimeout(() => {
                         window.location.href = "onboarding.html";
                     }, 1000);
                 }
-
-            } else {
+            }else {
                 showNotification(data.error || "Incorrect email or password", "error");
                 disableForm("loginForm", false);
             }

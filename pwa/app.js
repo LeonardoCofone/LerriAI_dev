@@ -213,10 +213,11 @@ function initEmojiSelect() {
 }
 
 const COSTS = {
-    TEXT_MESSAGE: 0.00099,          
-    VOICE_PER_SECOND: 0.0035 / 60,  
+    TEXT_MESSAGE: 0.00099,
+    VOICE_PER_SECOND: 0.0035 / 60,
     VOICE_BASE: 0.00099,
-    FILE_ATTACHMENT: 0.05
+    FILE_BASE: 0.002,
+    FILE_PER_MB: 0.003
 };
 
 let attachedFiles = [];
@@ -251,6 +252,15 @@ const md = window.markdownit();
 function calculateMessageCost(isVoice = false, durationSeconds = 0) {
     if (!isVoice) return COSTS.TEXT_MESSAGE;
     return COSTS.VOICE_BASE + (durationSeconds * COSTS.VOICE_PER_SECOND);
+}
+
+function calculateFileCost(files) {
+    return files.reduce((total, fileItem) => {
+        const file = fileItem.file || fileItem;
+        const sizeMB = file.size / (1024 * 1024);
+        
+        return total + COSTS.FILE_BASE + (sizeMB * COSTS.FILE_PER_MB);
+    }, 0);
 }
 
 function makeLinksClickable(text) {
@@ -604,7 +614,7 @@ function initChat() {
                     const durationSeconds = Math.round(durationMs / 1000);
 
                     const voiceCost = calculateMessageCost(true, durationSeconds);
-                    const filesCost = attachedFiles.length * COSTS.FILE_ATTACHMENT;
+                    const filesCost = calculateFileCost(attachedFiles);
                     const totalCost = voiceCost + filesCost;
 
                     if (settings.currentSpend + totalCost > settings.maxSpend) {
@@ -717,7 +727,7 @@ function initChat() {
         if (!msg && attachedFiles.length === 0) return;
 
         const textCost = calculateMessageCost(false);
-        const filesCost = attachedFiles.length * COSTS.FILE_ATTACHMENT;
+        const filesCost = calculateFileCost(attachedFiles);
         const totalCost = textCost + filesCost;
 
         if (settings.currentSpend + totalCost > settings.maxSpend) {
@@ -848,7 +858,7 @@ function handleFileSelect(event) {
             continue;
         }
 
-        if (file.size > 10 * 1024 * 1024) {
+        if (file.size > 2 * 1024 * 1024) {
             showNotification(`❌ File too large (max 10MB): ${file.name}`, 'error');
             continue;
         }
