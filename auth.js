@@ -1,6 +1,6 @@
 const CLIENT_ID = "692895314861-lmsub53tc5mdso1g7rkb6gop098safoe.apps.googleusercontent.com";
-const API_URL = "https://rental-eco-shopper-ray.trycloudflare.com/api/register";
-const API_LOGIN_URL = "https://rental-eco-shopper-ray.trycloudflare.com/api/login";
+const API_URL = "https://api.lerriai.com/api/register";
+const API_LOGIN_URL = "https://api.lerriai.com/api/login";
 
 function showNotification(message, type = "info") {
     const notification = document.getElementById("notification");
@@ -77,7 +77,7 @@ if (document.getElementById("registerForm")) {
     if (savedEmail) {
         (async () => {
             try {
-                const response = await fetch(`https://rental-eco-shopper-ray.trycloudflare.com/api/check-onboarding?email=${encodeURIComponent(savedEmail)}`);
+                const response = await fetch(`https://api.lerriai.com/api/check-onboarding?email=${encodeURIComponent(savedEmail)}`);
                 const onboardingStatus = await response.json();
                 
                 if (onboardingStatus.completed) {
@@ -155,7 +155,7 @@ if (document.getElementById("registerForm")) {
                         localStorage.setItem("user_name", data.name);
                         localStorage.setItem("user_language", userLanguage);
 
-                        await fetch("https://rental-eco-shopper-ray.trycloudflare.com/api/set-language", {
+                        await fetch("https://api.lerriai.com/api/set-language", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ email: data.email, language: userLanguage })
@@ -164,7 +164,7 @@ if (document.getElementById("registerForm")) {
                         showNotification(`✅ Welcome, ${data.name}!`, "success");
 
                         try {
-                            const onboardingRes = await fetch(`https://rental-eco-shopper-ray.trycloudflare.com/api/check-onboarding?email=${encodeURIComponent(data.email)}`);
+                            const onboardingRes = await fetch(`https://api.lerriai.com/api/check-onboarding?email=${encodeURIComponent(data.email)}`);
                             const onboardingStatus = await onboardingRes.json();
 
                             if (onboardingStatus.completed) {
@@ -213,7 +213,7 @@ if (document.getElementById("loginForm")) {
     if (savedEmail) {
         (async () => {
             try {
-                const response = await fetch(`https://rental-eco-shopper-ray.trycloudflare.com/api/check-onboarding?email=${encodeURIComponent(savedEmail)}`);
+                const response = await fetch(`https://api.lerriai.com/api/check-onboarding?email=${encodeURIComponent(savedEmail)}`);
                 const onboardingStatus = await response.json();
                 
                 if (onboardingStatus.completed) {
@@ -256,7 +256,7 @@ if (document.getElementById("loginForm")) {
 
                 showNotification(`✅ Welcome back, ${data.name}!`, "success");
 
-                const response = await fetch(`https://rental-eco-shopper-ray.trycloudflare.com/api/check-onboarding?email=${encodeURIComponent(email)}`);
+                const response = await fetch(`https://api.lerriai.com/api/check-onboarding?email=${encodeURIComponent(email)}`);
                 const onboardingStatus = await response.json();
                 
                 if (onboardingStatus.completed) {
