@@ -1,4 +1,5 @@
-const BACKEND_URL = "http://localhost:3000/api/chat";
+const BACKEND_URL = "https://rental-eco-shopper-ray.trycloudflare.com/api/chat";
+const API_BASE_URL = 'https://rental-eco-shopper-ray.trycloudflare.com'; //http://localhost:3000
 const PAYPAL_CLIENT_ID = "YOUR_PAYPAL_CLIENT_ID_HERE";
 const CLIENT_ID = "692895314861-lmsub53tc5mdso1g7rkb6gop098safoe.apps.googleusercontent.com";
 const LANGUAGES = {
@@ -120,7 +121,7 @@ function initDailyBriefingButton() {
         try {
             const loadingMsg = addMessage('📊 Generating your daily briefing...', 'bot', false);
 
-            const response = await fetch('http://localhost:3000/api/trigger-briefing', {
+            const response = await fetch('https://rental-eco-shopper-ray.trycloudflare.com/api/trigger-briefing', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
@@ -169,7 +170,7 @@ async function checkTrialStatus() {
     if (!email) return { canSendMessage: true, messagesRemaining: 80 };
     
     try {
-        const response = await fetch(`http://localhost:3000/api/check-trial-status?email=${encodeURIComponent(email)}`);
+        const response = await fetch(`https://rental-eco-shopper-ray.trycloudflare.com/api/check-trial-status?email=${encodeURIComponent(email)}`);
         const data = await response.json();
         return data;
     } catch (error) {
@@ -228,7 +229,7 @@ async function showSubscriptionModal() {
             },
             createSubscription: async function(data, actions) {
                 const email = getUserEmail();
-                const response = await fetch('http://localhost:3000/api/create-subscription', {
+                const response = await fetch('https://rental-eco-shopper-ray.trycloudflare.com/api/create-subscription', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email })
@@ -239,7 +240,7 @@ async function showSubscriptionModal() {
             },
             onApprove: async function(data, actions) {
                 const email = getUserEmail();
-                const response = await fetch('http://localhost:3000/api/activate-subscription', {
+                const response = await fetch('https://rental-eco-shopper-ray.trycloudflare.com/api/activate-subscription', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
@@ -466,7 +467,7 @@ async function syncToServer() {
     };
 
     try {
-        const response = await fetch("http://localhost:3000/api/save-data", {
+        const response = await fetch("https://rental-eco-shopper-ray.trycloudflare.com/api/save-data", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
@@ -497,7 +498,7 @@ async function loadDataFromServer() {
     }
 
     try {
-        const res = await fetch(`http://localhost:3000/api/load-data?user=${encodeURIComponent(user)}`);
+        const res = await fetch(`https://rental-eco-shopper-ray.trycloudflare.com/api/load-data?user=${encodeURIComponent(user)}`);
         if (!res.ok) throw new Error('Load data error');
         
         const data = await res.json();
@@ -748,7 +749,7 @@ async function ensurePushSubscription() {
                 applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
             });
             
-            await fetch('http://localhost:3000/api/subscribe-notifications', {
+            await fetch('https://rental-eco-shopper-ray.trycloudflare.com/api/subscribe-notifications', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1277,7 +1278,7 @@ function initCalendar() {
         btn.disabled = true;
 
         try {
-            const response = await fetch('http://localhost:3000/api/import-google-calendar', {
+            const response = await fetch('https://rental-eco-shopper-ray.trycloudflare.com/api/import-google-calendar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
@@ -1779,7 +1780,7 @@ function initSettings(){
         settings.schedule.dailyBibleVerse = bibleVerseCheckbox.checked;
         
         try {
-            await fetch("http://localhost:3000/api/set-language", {
+            await fetch("https://rental-eco-shopper-ray.trycloudflare.com/api/set-language", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: getUserEmail(), language: settings.language })
@@ -1884,7 +1885,7 @@ function initDeleteAccount() {
         const email = localStorage.getItem("user_email");
         if (email) {
             try {
-                await fetch("http://localhost:3000/api/delete-account", {
+                await fetch("https://rental-eco-shopper-ray.trycloudflare.com/api/delete-account", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email })
@@ -1937,7 +1938,7 @@ function initClearChat() {
         messagesArray = [];
         
         try {
-            await fetch("http://localhost:3000/api/save-data", {
+            await fetch("https://rental-eco-shopper-ray.trycloudflare.com/api/save-data", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
@@ -2004,7 +2005,7 @@ async function handleReauth() {
             ux_mode: 'popup',
             callback: async (response) => {
                 if (response.code) {
-                    const result = await fetch('http://localhost:3000/api/refresh-oauth', {
+                    const result = await fetch('https://rental-eco-shopper-ray.trycloudflare.com/api/refresh-oauth', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -2123,7 +2124,7 @@ async function subscribeUserToPush() {
             applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
         });
         
-        await fetch('http://localhost:3000/api/subscribe-notifications', {
+        await fetch('https://rental-eco-shopper-ray.trycloudflare.com/api/subscribe-notifications', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

@@ -1102,7 +1102,7 @@ async function finishSetup() {
     };
 
     try {
-        const response = await fetch('http://localhost:3000/api/onboarding', {
+        const response = await fetch('https://rental-eco-shopper-ray.trycloudflare.com/api/onboarding', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

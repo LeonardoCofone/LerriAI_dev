@@ -231,7 +231,7 @@ function createParticles() {
 
 async function registerUser(email, preferred_name) {
   try {
-    const response = await fetch('http://localhost:3000/api/register', {
+    const response = await fetch('https://rental-eco-shopper-ray.trycloudflare.com/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, preferred_name })
@@ -253,7 +253,7 @@ if (registerForm) {
         const preferred_name = document.getElementById('nameInput').value;
 
         try {
-            const res = await fetch('http://localhost:3000/api/register', {
+            const res = await fetch('https://rental-eco-shopper-ray.trycloudflare.com/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, preferred_name })
