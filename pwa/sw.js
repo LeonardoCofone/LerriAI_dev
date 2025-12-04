@@ -1,110 +1,117 @@
-const CACHE_VERSION = 1;
-const CACHE_NAME = `lerri-cache-v${CACHE_VERSION}`;
+const CACHE_NAME = 'lerri-pwa-v1';
 const urlsToCache = [
-    "./index.html",
-    "./app.css",
-    "./app.js",
-    "./manifest.json",
+    '/',
+    '/index.html',
+    '/app.js',
+    '/app.css',
+    '/schedule-manager.js',
+    '/schedule-manager.css',
+    '/icon/icon-192.png',
+    '/icon/icon-512.png',
+    'https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js'
 ];
 
-self.addEventListener("install", event => {
-    console.log(`📦 Installing SW version ${CACHE_VERSION}`);
+self.addEventListener('install', (event) => {
+    console.log('[SW] Installing...');
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then(cache => {
-                console.log('💾 Caching app shell');
+            .then((cache) => {
+                console.log('[SW] Caching app shell');
                 return cache.addAll(urlsToCache);
             })
             .then(() => self.skipWaiting())
     );
 });
 
-self.addEventListener("activate", event => {
-    console.log(`🔄 Activating SW version ${CACHE_VERSION}`);
+self.addEventListener('activate', (event) => {
+    console.log('[SW] Activating...');
     event.waitUntil(
-        caches.keys().then(keys => {
+        caches.keys().then((cacheNames) => {
             return Promise.all(
-                keys.filter(key => key !== CACHE_NAME)
-                    .map(key => {
-                        console.log('🗑️ Deleting old cache:', key);
-                        return caches.delete(key);
-                    })
+                cacheNames.map((cacheName) => {
+                    if (cacheName !== CACHE_NAME) {
+                        console.log('[SW] Deleting old cache:', cacheName);
+                        return caches.delete(cacheName);
+                    }
+                })
             );
-        }).then(() => {
-            console.log('✅ SW activated');
-            return self.clients.claim();
+        }).then(() => self.clients.claim())
+    );
+});
+
+self.addEventListener('fetch', (event) => {
+    event.respondWith(
+        caches.match(event.request)
+            .then((response) => {
+                if (response) {
+                    return response;
+                }
+                return fetch(event.request);
+            })
+    );
+});
+
+self.addEventListener('push', (event) => {
+    console.log('[SW] Push notification received');
+    
+    let notificationData = {
+        title: 'LerriAI',
+        body: 'You have a new update',
+        icon: '/icon/icon-192.png',
+        badge: '/icon/icon-192.png',
+        data: {
+            url: '/'
+        }
+    };
+
+    if (event.data) {
+        try {
+            const payload = event.data.json();
+            notificationData = {
+                title: payload.title || notificationData.title,
+                body: payload.body || notificationData.body,
+                icon: payload.icon || notificationData.icon,
+                badge: payload.badge || notificationData.badge,
+                data: payload.data || notificationData.data
+            };
+        } catch (error) {
+            console.error('[SW] Error parsing push data:', error);
+        }
+    }
+
+    event.waitUntil(
+        self.registration.showNotification(notificationData.title, {
+            body: notificationData.body,
+            icon: notificationData.icon,
+            badge: notificationData.badge,
+            data: notificationData.data,
+            vibrate: [200, 100, 200],
+            tag: 'lerri-notification',
+            requireInteraction: false
         })
     );
 });
 
-self.addEventListener("fetch", event => {
-    if (event.request.url.includes("/api/")) {
-        return;
-    }
-    
-    event.respondWith(
-        fetch(event.request)
-            .then(networkResponse => {
-                if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-                    return networkResponse;
-                }
-                
-                const responseToCache = networkResponse.clone();
-                
-                caches.open(CACHE_NAME).then(cache => {
-                    if (event.request.url.startsWith(self.location.origin)) {
-                        cache.put(event.request, responseToCache);
-                    }
-                });
-                
-                return networkResponse;
-            })
-            .catch(() => {
-                return caches.match(event.request).then(cachedResponse => {
-                    if (cachedResponse) {
-                        return cachedResponse;
-                    }
-                    
-                    if (event.request.destination === "document") {
-                        return caches.match("./index.html");
-                    }
-                });
-            })
-    );
-});
-
-self.addEventListener('push', event => {
-    console.log('Push received:', event);
-    
-    const data = event.data ? event.data.json() : {
-        title: 'Notification',
-        body: 'You have a new message',
-        icon: '/icon/icon-192.png'
-    };
-    
-    const options = {
-        body: data.body,
-        icon: data.icon || '/icon/icon-192.png',
-        badge: data.badge || '/icon/icon-192.png',
-        vibrate: [200, 100, 200],
-        data: data.data || {},
-        actions: [
-            { action: 'open', title: 'Open App' },
-            { action: 'close', title: 'Close' }
-        ]
-    };
-    
-    event.waitUntil(
-        self.registration.showNotification(data.title, options)
-    );
-});
-
-self.addEventListener('notificationclick', event => {
+self.addEventListener('notificationclick', (event) => {
+    console.log('[SW] Notification clicked');
     event.notification.close();
-    
-    if (event.action === 'open') {
-        event.waitUntil(
-            clients.openWindow('/')
-        );
-    }
+
+    const urlToOpen = event.notification.data?.url || '/';
+
+    event.waitUntil(
+        clients.matchAll({
+            type: 'window',
+            includeUncontrolled: true
+        }).then((clientList) => {
+            for (let client of clientList) {
+                if (client.url === urlToOpen && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) {
+                return clients.openWindow(urlToOpen);
+            }
+        })
+    );
 });

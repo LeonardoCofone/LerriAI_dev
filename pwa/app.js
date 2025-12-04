@@ -167,7 +167,7 @@ function initDailyBriefingButton() {
 
 async function checkTrialStatus() {
     const email = getUserEmail();
-    if (!email) return { canSendMessage: true, messagesRemaining: 80 };
+    if (!email) return { canSendMessage: true, messagesRemaining: 10 };
     
     try {
         const response = await fetch(`https://api.lerriai.com/api/check-trial-status?email=${encodeURIComponent(email)}`);
@@ -175,7 +175,7 @@ async function checkTrialStatus() {
         return data;
     } catch (error) {
         console.error('Trial status check error:', error);
-        return { canSendMessage: true, messagesRemaining: 80 };
+        return { canSendMessage: true, messagesRemaining: 10 };
     }
 }
 
@@ -654,9 +654,14 @@ function initTabs() {
     activateTab(savedTab);
 }
 
+
+let deferredPrompt = null;
+let isStandalone = false;
+
 function checkPWAStatus() {
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                        window.navigator.standalone === true;
+    isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                   window.navigator.standalone === true ||
+                   document.referrer.includes('android-app://');
     
     if (isStandalone) {
         localStorage.setItem('pwa-installed', 'true');
@@ -666,12 +671,199 @@ function checkPWAStatus() {
     return localStorage.getItem('pwa-installed') === 'true';
 }
 
+function initPWAInstallPrompt() {
+    if (checkPWAStatus()) {
+        console.log('✅ PWA already installed');
+        return;
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('📱 beforeinstallprompt event fired');
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        const dismissTime = localStorage.getItem('pwa-prompt-dismiss-time');
+        const daysSinceDismiss = dismissTime ? 
+            (Date.now() - parseInt(dismissTime)) / (1000 * 60 * 60 * 24) : 999;
+        
+        if (daysSinceDismiss >= 7) {
+            setTimeout(() => showPWAInstallBanner(), 2000);
+        }
+    });
+
+    window.addEventListener('appinstalled', () => {
+        console.log('✅ PWA installed successfully');
+        localStorage.setItem('pwa-installed', 'true');
+        localStorage.removeItem('pwa-prompt-dismiss-time');
+        hidePWAInstallBanner();
+        deferredPrompt = null;
+        
+        setTimeout(() => promptNotificationPermission(), 2000);
+    });
+}
+
 function checkNotificationStatus() {
     if (!('Notification' in window)) {
         return 'unsupported';
     }
     
     return Notification.permission;
+}
+
+function checkNotificationPermission() {
+    if (!('Notification' in window)) {
+        console.log('❌ Notifications not supported');
+        return 'unsupported';
+    }
+    return Notification.permission;
+}
+
+function promptNotificationPermission() {
+    const permission = checkNotificationPermission();
+    
+    if (permission === 'unsupported') return;
+    if (permission === 'granted') {
+        console.log('✅ Notifications already enabled');
+        ensurePushSubscription();
+        return;
+    }
+    if (permission === 'denied') {
+        console.log('❌ Notifications denied by user');
+        return;
+    }
+
+    const dismissTime = localStorage.getItem('notification-prompt-dismiss-time');
+    const daysSinceDismiss = dismissTime ? 
+        (Date.now() - parseInt(dismissTime)) / (1000 * 60 * 60 * 24) : 999;
+    
+    if (daysSinceDismiss < 3) {
+        console.log('⏳ Notification prompt dismissed recently');
+        return;
+    }
+
+    setTimeout(() => showNotificationModal(), 1000);
+}
+
+function showNotificationModal() {
+    const existingModal = document.getElementById('notification-permission-modal');
+    if (existingModal) return;
+
+    const modal = document.createElement('div');
+    modal.id = 'notification-permission-modal';
+    modal.innerHTML = `
+        <div class="modal-overlay">
+            <div class="modal-content notification-modal">
+                <div class="modal-icon">🔔</div>
+                <h3>Enable Notifications</h3>
+                <p><strong>Stay updated!</strong></p>
+                <p>Get daily briefings, task reminders, and important updates.</p>
+                <div class="modal-actions">
+                    <button id="enable-notifications-btn" class="btn-primary">Enable Notifications</button>
+                    <button id="dismiss-notifications-btn" class="btn-secondary">Maybe Later</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10001;
+        animation: fadeIn 0.3s ease-out;
+    `;
+
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        .modal-overlay {
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .notification-modal {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+        .modal-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+        .notification-modal h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.5rem;
+        }
+        .notification-modal p {
+            margin: 5px 0;
+            color: #666;
+        }
+        .notification-modal p strong {
+            color: #667eea;
+        }
+        .modal-actions {
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+    `;
+    document.head.appendChild(style);
+
+    document.body.appendChild(modal);
+
+    document.getElementById('enable-notifications-btn').addEventListener('click', async () => {
+        const btn = document.getElementById('enable-notifications-btn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Requesting...';
+        
+        try {
+            const permission = await Notification.requestPermission();
+            
+            if (permission === 'granted') {
+                await ensurePushSubscription();
+                showNotification('🔔 Notifications enabled!', 'success');
+                localStorage.removeItem('notification-prompt-dismiss-time');
+            } else {
+                showNotification('Notifications blocked. Enable them in settings.', 'info');
+                localStorage.setItem('notification-prompt-dismiss-time', Date.now().toString());
+            }
+        } catch (error) {
+            console.error('Notification permission error:', error);
+            showNotification('❌ Error enabling notifications', 'error');
+        } finally {
+            hideNotificationModal();
+        }
+    });
+
+    document.getElementById('dismiss-notifications-btn').addEventListener('click', () => {
+        localStorage.setItem('notification-prompt-dismiss-time', Date.now().toString());
+        hideNotificationModal();
+    });
+}
+
+function hideNotificationModal() {
+    const modal = document.getElementById('notification-permission-modal');
+    if (modal) {
+        modal.style.animation = 'fadeOut 0.3s ease-out';
+        setTimeout(() => modal.remove(), 300);
+    }
 }
 
 async function checkAndPromptPWA() {
@@ -737,19 +929,29 @@ async function checkAndPromptNotifications() {
 
     setTimeout(() => showNotificationPrompt(), 500);
 }
+
+
 async function ensurePushSubscription() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        console.log('❌ Push notifications not supported');
+        return;
+    }
+
     try {
         const registration = await navigator.serviceWorker.ready;
         let subscription = await registration.pushManager.getSubscription();
         
         if (!subscription) {
             console.log('📱 Creating push subscription...');
+            
+            const vapidPublicKey = 'BGR8PSUhEMD5Jij2vMHJamrLlnPZAi26RDhWCRLYKr0J_Cl2L7pZjgbqTHxKqzqU4bMYLNibnl4ltPQzIFkr0-c';
+            
             subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
             });
             
-            await fetch('https://api.lerriai.com/api/subscribe-notifications', {
+            const response = await fetch('https://api.lerriai.com/api/subscribe-notifications', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -758,7 +960,11 @@ async function ensurePushSubscription() {
                 })
             });
             
-            console.log('✅ Push subscription created');
+            if (response.ok) {
+                console.log('✅ Push subscription created');
+            } else {
+                throw new Error('Subscription failed');
+            }
         } else {
             console.log('✅ Push subscription exists');
         }
@@ -1844,17 +2050,25 @@ async function initServiceWorker() {
         return;
     }
 
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    for (let registration of registrations) {
-        await registration.unregister();
-        console.log('🗑️ Old Service Worker removed');
+    try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (let registration of registrations) {
+            await registration.unregister();
+            console.log('🗑️ Old Service Worker removed');
+        }
+    } catch (error) {
+        console.error('Error unregistering SW:', error);
     }
     
     if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        for (let cacheName of cacheNames) {
-            await caches.delete(cacheName);
-            console.log('🗑️ Cache removed:', cacheName);
+        try {
+            const cacheNames = await caches.keys();
+            for (let cacheName of cacheNames) {
+                await caches.delete(cacheName);
+                console.log('🗑️ Cache removed:', cacheName);
+            }
+        } catch (error) {
+            console.error('Error clearing caches:', error);
         }
     }
     
@@ -1863,13 +2077,37 @@ async function initServiceWorker() {
             const registration = await navigator.serviceWorker.register('./sw.js');
             console.log('✅ Service Worker registered:', registration.scope);
             
-            await checkAndPromptPWA();
+            initPWAInstallPrompt();
+            
+            if (checkPWAStatus()) {
+                promptNotificationPermission();
+            }
             
         } catch (error) {
             console.error('❌ Service Worker registration error:', error);
         }
     });
 }
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const userEmail = getUserEmail();
+    if (!userEmail) {
+        window.location.href = '../login.html';
+        return;
+    }
+    
+    await loadDataFromServer();
+    
+    initTabs();
+    initChat();
+    initCalendar();
+    initTasks();
+    initSettings();
+    initServiceWorker();
+    initDeleteAccount();
+    initLogout();
+    initClearChat();
+});
 
 function initDeleteAccount() {
     const deleteBtn = document.getElementById('delete-account');
@@ -2042,9 +2280,9 @@ function checkPWAInstallation() {
     return localStorage.getItem('pwa-installed') === 'true';
 }
 
-function showPWAInstallBanner(deferredPrompt) {
+function showPWAInstallBanner() {
     const existingBanner = document.getElementById('pwa-install-banner');
-    if (existingBanner) return;
+    if (existingBanner || !deferredPrompt) return;
 
     const banner = document.createElement('div');
     banner.id = 'pwa-install-banner';
@@ -2053,7 +2291,7 @@ function showPWAInstallBanner(deferredPrompt) {
             <div class="pwa-banner-icon">📱</div>
             <div class="pwa-banner-text">
                 <h3>Install LerriAI</h3>
-                <p>Get the best experience by installing our app on your device! It's very light ;)</p>
+                <p>Get the best experience with our app!</p>
             </div>
             <div class="pwa-banner-actions">
                 <button id="pwa-install-btn" class="btn-primary">Install</button>
@@ -2068,34 +2306,90 @@ function showPWAInstallBanner(deferredPrompt) {
         left: 0;
         right: 0;
         background: white;
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
         z-index: 10000;
         padding: 20px;
-        animation: slideUp 0.3s ease-out;
+        animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     `;
 
     document.body.appendChild(banner);
 
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        @keyframes slideDown {
+            from { transform: translateY(0); }
+            to { transform: translateY(100%); }
+        }
+        .pwa-banner-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .pwa-banner-icon {
+            font-size: 3rem;
+            flex-shrink: 0;
+        }
+        .pwa-banner-text {
+            flex: 1;
+        }
+        .pwa-banner-text h3 {
+            margin: 0 0 5px 0;
+            font-size: 1.2rem;
+        }
+        .pwa-banner-text p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .pwa-banner-actions {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        @media (max-width: 600px) {
+            .pwa-banner-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            .pwa-banner-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+
     document.getElementById('pwa-install-btn').addEventListener('click', async () => {
         if (!deferredPrompt) return;
 
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
+        const installBtn = document.getElementById('pwa-install-btn');
+        installBtn.disabled = true;
+        installBtn.textContent = '⏳ Installing...';
 
-        if (outcome === 'accepted') {
-            console.log('✅ User accepted PWA install');
-            localStorage.setItem('pwa-installed', 'true');
-            localStorage.removeItem('pwa-prompt-dismiss-time');
-        } else {
-            console.log('❌ User dismissed PWA install');
-            localStorage.setItem('pwa-prompt-dismiss-time', Date.now().toString());
-        }
+        try {
+            await deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
 
-        hidePWAInstallBanner();
-        deferredPrompt = null;
-
-        if (outcome === 'accepted') {
-            setTimeout(() => checkAndPromptNotifications(), 1000);
+            if (outcome === 'accepted') {
+                console.log('✅ User accepted PWA install');
+                localStorage.setItem('pwa-installed', 'true');
+                localStorage.removeItem('pwa-prompt-dismiss-time');
+                showNotification('✅ App installed successfully!', 'success');
+            } else {
+                console.log('❌ User dismissed PWA install');
+                localStorage.setItem('pwa-prompt-dismiss-time', Date.now().toString());
+            }
+        } catch (error) {
+            console.error('Install error:', error);
+        } finally {
+            hidePWAInstallBanner();
+            deferredPrompt = null;
         }
     });
 
@@ -2105,11 +2399,12 @@ function showPWAInstallBanner(deferredPrompt) {
     });
 }
 
+
 function hidePWAInstallBanner() {
     const banner = document.getElementById('pwa-install-banner');
     if (banner) {
-        banner.style.animation = 'slideDown 0.3s ease-out';
-        setTimeout(() => banner.remove(), 300);
+        banner.style.animation = 'slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+        setTimeout(() => banner.remove(), 400);
     }
 }
 
@@ -2155,6 +2450,7 @@ function urlBase64ToUint8Array(base64String) {
     }
     return outputArray;
 }
+
 
 
 function showNotificationPrompt() {

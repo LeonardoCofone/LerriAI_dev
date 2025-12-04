@@ -1,20 +1,36 @@
 {
-    "name": "Lerri - Your Digital Strategic Assistant",
-    "short_name": "LerriAI",
-    "start_url": "./index.html",
-    "display": "standalone",
-    "background_color": "#667eea",
-    "theme_color": "#667eea",
-    "icons": [
-        {
-            "src": "icon/icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png"
-        },
-        {
-            "src": "icon/icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png"
-        }
-    ]
+  "name": "LerriAI - Your Digital Strategic Assistant",
+  "short_name": "LerriAI",
+  "description": "Your digital strategic AI assistant for productivity, calendar management, and task organization",
+  "id": "lerri-ai-pwa",
+  "start_url": "/pwa/index.html",
+  "scope": "/pwa/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0827b0",
+  "theme_color": "#0827b0",
+  "icons": [
+    {
+      "src": "/pwa/icon/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa/icon/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/pwa/icon/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "categories": ["productivity", "utilities", "lifestyle"],
+  "prefer_related_applications": false
 }
