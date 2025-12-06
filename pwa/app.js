@@ -627,7 +627,12 @@ function getUserIdentifier() {
     return getUserEmail() || getPwaId() || null;
 }
 
+let isInitialized = false;
+
 document.addEventListener('DOMContentLoaded', async () => {
+    if (isInitialized) return;
+    isInitialized = true;
+
     const userEmail = getUserEmail();
     if (!userEmail) {
         window.location.href = '../login.html';
@@ -897,35 +902,17 @@ function hideNotificationModal() {
 
 async function checkAndPromptPWA() {
     if (checkPWAStatus()) {
-        console.log('✅ PWA already installed');
         await checkAndPromptNotifications();
         return;
     }
 
     const dismissTime = localStorage.getItem('pwa-prompt-dismiss-time');
-    const daysSinceDismiss = dismissTime ? 
-        (Date.now() - parseInt(dismissTime)) / (1000 * 60 * 60 * 24) : 999;
-    
-    if (daysSinceDismiss < 7) {
-        console.log('⏳ PWA prompt dismissed recently, waiting...');
-        return;
+    const daysSinceDismiss = dismissTime ? (Date.now() - parseInt(dismissTime, 10)) / (1000 * 60 * 60 * 24) : 999;
+    if (daysSinceDismiss < 7) return;
+
+    if (deferredPrompt) {
+        showPWAInstallBanner();
     }
-
-    let deferredPrompt;
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        showPWAInstallBanner(deferredPrompt);
-    });
-
-    window.addEventListener('appinstalled', () => {
-        localStorage.setItem('pwa-installed', 'true');
-        localStorage.removeItem('pwa-prompt-dismiss-time');
-        hidePWAInstallBanner();
-        console.log('✅ PWA installed successfully');
-        setTimeout(() => checkAndPromptNotifications(), 1000);
-    });
 }
 
 async function checkAndPromptNotifications() {
@@ -2106,30 +2093,7 @@ async function initServiceWorker() {
     });
 }
 
-let isInitialized = false;
 
-document.addEventListener('DOMContentLoaded', async () => {
-    if (isInitialized) return;
-    isInitialized = true;
-
-    const userEmail = getUserEmail();
-    if (!userEmail) {
-        window.location.href = '../login.html';
-        return;
-    }
-    
-    await loadDataFromServer();
-    
-    initTabs();
-    initChat();
-    initCalendar();
-    initTasks();
-    initSettings();
-    initServiceWorker();
-    initDeleteAccount();
-    initLogout();
-    initClearChat();
-});
 
 function initDeleteAccount() {
     const deleteBtn = document.getElementById('delete-account');
