@@ -16,6 +16,9 @@ const LANGUAGES = {
 };
 
 function initDailyBriefingButton() {
+    if (initDailyBriefingButton.initialized) return;
+    initDailyBriefingButton.initialized = true;
+
     const chatHeaderBar = document.querySelector('.chat-header-bar');
     if (!chatHeaderBar) return;
 
@@ -1000,6 +1003,8 @@ async function ensurePushSubscription() {
 }
 
 function initChat() {
+    if (initChat.initialized) return;
+    initChat.initialized = true;
     const messagesContainer = document.getElementById('messages');
     const chatForm = document.getElementById('chat-form');
     const chatInput = document.getElementById('chat-input');
@@ -2101,7 +2106,12 @@ async function initServiceWorker() {
     });
 }
 
+let isInitialized = false;
+
 document.addEventListener('DOMContentLoaded', async () => {
+    if (isInitialized) return;
+    isInitialized = true;
+
     const userEmail = getUserEmail();
     if (!userEmail) {
         window.location.href = '../login.html';
