@@ -369,6 +369,14 @@ let settings = {
     model: 'gpt-4o-mini',
     language: 'it',
     stats: { messages: 0, events: 0, tasks: 0 },
+    subscription: {
+        active: false,
+        trialMessagesUsed: 0,
+        trialLimit: 80,
+        subscriptionId: null,
+        subscriptionStartDate: null,
+        subscriptionEndDate: null
+        },
     schedule: {
         work: null,
         subjects: [],
@@ -491,7 +499,17 @@ async function syncToServer() {
         user, 
         events, 
         tasks, 
-        settings,  
+        settings: {
+            ...settings,
+            subscription: settings.subscription || {
+                active: false,
+                trialMessagesUsed: 0,
+                trialLimit: 80,
+                subscriptionId: null,
+                subscriptionStartDate: null,
+                subscriptionEndDate: null
+            }
+        },  
         messages: messagesArray 
     };
 
@@ -503,9 +521,9 @@ async function syncToServer() {
         });
         
         if (response.ok) {
-            console.log("✅ Sync completato");
+            console.log("✅ Sync completed - Trial:", settings.subscription?.trialMessagesUsed || 0);
         } else {
-            console.error("❌ Sync fallito:", await response.text());
+            console.error("❌ Sync failed:", await response.text());
         }
     } catch (err) {
         console.error("Sync error:", err);
@@ -544,7 +562,6 @@ async function loadDataFromServer() {
             tasks = data.tasks;
         }
 
-        // Initialize settings with proper defaults
         if (data.settings !== undefined) {
             settings = {
                 maxSpend: data.settings.maxSpend !== undefined ? data.settings.maxSpend : 0.90,
@@ -565,6 +582,14 @@ async function loadDataFromServer() {
                     categories: Array.isArray(data.settings.schedule?.categories) ? data.settings.schedule.categories : [],
                     sports: Array.isArray(data.settings.schedule?.sports) ? data.settings.schedule.sports : [],
                     hobbies: Array.isArray(data.settings.schedule?.hobbies) ? data.settings.schedule.hobbies : []
+                },
+                subscription: data.settings.subscription || {
+                    active: false,
+                    trialMessagesUsed: 0,
+                    trialLimit: 80,
+                    subscriptionId: null,
+                    subscriptionStartDate: null,
+                    subscriptionEndDate: null
                 }
             };
         }
@@ -635,7 +660,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const userEmail = getUserEmail();
     if (!userEmail) {
-        window.location.href = '../login.html';
+        //window.location.href = '../login.html';
         return;
     }
     
@@ -1001,7 +1026,7 @@ function initChat() {
     updateTrialBanner();
     
     if (!email) {
-        window.location.href = '../login.html';
+        //window.location.href = '../login.html';
         return;
     }
 
