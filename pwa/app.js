@@ -372,7 +372,7 @@ let settings = {
     subscription: {
         active: false,
         trialMessagesUsed: 0,
-        trialLimit: 80,
+        trialLimit: 8,
         subscriptionId: null,
         subscriptionStartDate: null,
         subscriptionEndDate: null
@@ -504,7 +504,7 @@ async function syncToServer() {
             subscription: settings.subscription || {
                 active: false,
                 trialMessagesUsed: 0,
-                trialLimit: 80,
+                trialLimit: 8,
                 subscriptionId: null,
                 subscriptionStartDate: null,
                 subscriptionEndDate: null
@@ -586,7 +586,7 @@ async function loadDataFromServer() {
                 subscription: data.settings.subscription || {
                     active: false,
                     trialMessagesUsed: 0,
-                    trialLimit: 80,
+                    trialLimit: 8,
                     subscriptionId: null,
                     subscriptionStartDate: null,
                     subscriptionEndDate: null
