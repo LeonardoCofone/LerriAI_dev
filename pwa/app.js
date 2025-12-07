@@ -1165,7 +1165,12 @@ function initChat() {
                                 settings.stats.events = data.stats.events || settings.stats.events;
                                 settings.stats.tasks = data.stats.tasks || settings.stats.tasks;
                             }
-                            
+
+                            if (data.subscription) {
+                                settings.subscription = data.subscription;
+                                console.log('✅ Updated subscription from server:', settings.subscription);
+                            }
+
                             await syncToServer();
                             updateStats();
                             updateBudgetDisplay();
@@ -1298,7 +1303,12 @@ function initChat() {
                 settings.stats.events = data.stats.events || settings.stats.events;
                 settings.stats.tasks = data.stats.tasks || settings.stats.tasks;
             }
-            
+
+            if (data.subscription) {
+                settings.subscription = data.subscription;
+                console.log('✅ Updated subscription from server:', settings.subscription);
+            }
+
             await syncToServer();
             updateStats();
             updateBudgetDisplay();
