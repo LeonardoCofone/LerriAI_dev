@@ -849,6 +849,8 @@ function initPWAInstallPrompt() {
     }, 3000);
 }
 
+initPWAInstallPrompt();
+
 function checkNotificationStatus() {
     if (!('Notification' in window)) {
         return 'unsupported';
@@ -2171,7 +2173,7 @@ function updateStats(){
     document.getElementById('total-tasks').textContent=settings.stats.tasks;
 }
 
-async function initServiceWorker() {
+function initServiceWorker() {
     if (!('serviceWorker' in navigator)) {
         console.log('❌ Service Workers not supported');
         return;
@@ -2204,7 +2206,7 @@ async function initServiceWorker() {
             const registration = await navigator.serviceWorker.register('./sw.js');
             console.log('✅ Service Worker registered:', registration.scope);
             
-            initPWAInstallPrompt();
+            // CHANGED: rimosso initPWAInstallPrompt() qui (già chiamato all'avvio)
             
             if (checkPWAStatus()) {
                 promptNotificationPermission();
