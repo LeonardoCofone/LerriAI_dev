@@ -234,7 +234,7 @@ async function showSubscriptionModal() {
             <div class="premium-divider"></div>
 
             <p class="subscription-price">
-                $4.99 <span>/ month</span>
+                $2.99 + What you use <span>/ month</span>
             </p>
 
             <div id="paypal-button-container"></div>
@@ -736,26 +736,65 @@ let deferredPrompt = null;
 let isStandalone = false;
 
 function checkPWAStatus() {
-    isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                   window.navigator.standalone === true ||
-                   document.referrer.includes('android-app://');
+    const displayMode = window.matchMedia('(display-mode: standalone)').matches;
+    const navigatorStandalone = window.navigator.standalone === true;
+    const androidApp = document.referrer.includes('android-app://');
+    const localStorageFlag = localStorage.getItem('pwa-installed') === 'true';
+    
+    console.log('🔍 PWA Status Check:', {
+        'Display Mode (standalone)': displayMode,
+        'Navigator Standalone (iOS)': navigatorStandalone,
+        'Android App Referrer': androidApp,
+        'LocalStorage Flag': localStorageFlag,
+        'Document Referrer': document.referrer
+    });
+    
+    isStandalone = displayMode || navigatorStandalone || androidApp;
     
     if (isStandalone) {
         localStorage.setItem('pwa-installed', 'true');
+        console.log('✅ PWA is running in standalone mode');
         return true;
     }
     
-    return localStorage.getItem('pwa-installed') === 'true';
+    if (localStorageFlag) {
+        console.log('✅ PWA marked as installed (localStorage)');
+        return true;
+    }
+    
+    console.log('❌ PWA not installed - browser mode');
+    return false;
 }
+
+window.testPWA = {
+    forceInstalled: () => {
+        localStorage.setItem('pwa-installed', 'true');
+        console.log('🧪 PWA forced as INSTALLED');
+        location.reload();
+    },
+    forceNotInstalled: () => {
+        localStorage.removeItem('pwa-installed');
+        localStorage.removeItem('pwa-prompt-dismiss-time');
+        console.log('🧪 PWA forced as NOT INSTALLED');
+        location.reload();
+    },
+    showBanner: () => {
+        localStorage.removeItem('pwa-prompt-dismiss-time');
+        showPWAInstallBanner();
+        console.log('🧪 Banner forced to show');
+    },
+    status: () => {
+        return checkPWAStatus();
+    }
+};
 
 function initPWAInstallPrompt() {
     if (checkPWAStatus()) {
-        console.log('✅ PWA already installed');
+        console.log('PWA already installed or running in standalone mode');
         return;
     }
 
     window.addEventListener('beforeinstallprompt', (e) => {
-        console.log('📱 beforeinstallprompt event fired');
         e.preventDefault();
         deferredPrompt = e;
         
@@ -763,19 +802,17 @@ function initPWAInstallPrompt() {
         const daysSinceDismiss = dismissTime ? 
             (Date.now() - parseInt(dismissTime)) / (1000 * 60 * 60 * 24) : 999;
         
-        if (daysSinceDismiss >= 7) {
-            setTimeout(() => showPWAInstallBanner(), 2000);
+        if (daysSinceDismiss >= 3) {
+            setTimeout(() => showPWAInstallBanner(), 1000);
         }
     });
 
     window.addEventListener('appinstalled', () => {
-        console.log('✅ PWA installed successfully');
+        console.log('PWA installed successfully');
         localStorage.setItem('pwa-installed', 'true');
         localStorage.removeItem('pwa-prompt-dismiss-time');
         hidePWAInstallBanner();
         deferredPrompt = null;
-        
-        setTimeout(() => promptNotificationPermission(), 2000);
     });
 }
 
@@ -2329,46 +2366,57 @@ function showPWAInstallBanner() {
         <div class="pwa-banner-content">
             <div class="pwa-banner-icon">📱</div>
             <div class="pwa-banner-text">
-                <h3>Install LerriAI</h3>
-                <p>Get the best experience with our app!</p>
+                <h3>Install LerriAI App</h3>
+                <p>Get instant access and work offline!</p>
             </div>
             <div class="pwa-banner-actions">
-                <button id="pwa-install-btn" class="btn-primary">Install</button>
-                <button id="pwa-dismiss-btn" class="btn-secondary">Not now</button>
+                <button id="pwa-install-btn" class="btn-primary">Install Now</button>
+                <button id="pwa-dismiss-btn" class="btn-secondary">×</button>
             </div>
         </div>
     `;
 
     banner.style.cssText = `
         position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
         background: white;
-        box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
         z-index: 10000;
         padding: 20px;
-        animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 16px;
+        max-width: 500px;
+        width: 90%;
+        animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     `;
-
-    document.body.appendChild(banner);
 
     const style = document.createElement('style');
     style.textContent = `
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
         @keyframes slideDown {
-            from { transform: translateY(0); }
-            to { transform: translateY(100%); }
+            from { 
+                transform: translateX(-50%) translateY(-100px);
+                opacity: 0;
+            }
+            to { 
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideUp {
+            from { 
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+            to { 
+                transform: translateX(-50%) translateY(-100px);
+                opacity: 0;
+            }
         }
         .pwa-banner-content {
             display: flex;
             align-items: center;
             gap: 15px;
-            max-width: 600px;
-            margin: 0 auto;
         }
         .pwa-banner-icon {
             font-size: 3rem;
@@ -2380,6 +2428,7 @@ function showPWAInstallBanner() {
         .pwa-banner-text h3 {
             margin: 0 0 5px 0;
             font-size: 1.2rem;
+            color: #667eea;
         }
         .pwa-banner-text p {
             margin: 0;
@@ -2390,19 +2439,29 @@ function showPWAInstallBanner() {
             display: flex;
             gap: 10px;
             flex-shrink: 0;
+            align-items: center;
+        }
+        #pwa-dismiss-btn {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            font-size: 1.5rem;
+            line-height: 1;
+            min-width: unset;
         }
         @media (max-width: 600px) {
             .pwa-banner-content {
-                flex-direction: column;
-                text-align: center;
+                flex-wrap: wrap;
             }
             .pwa-banner-actions {
                 width: 100%;
-                flex-direction: column;
+                justify-content: space-between;
             }
         }
     `;
     document.head.appendChild(style);
+
+    document.body.appendChild(banner);
 
     document.getElementById('pwa-install-btn').addEventListener('click', async () => {
         if (!deferredPrompt) return;
@@ -2416,12 +2475,10 @@ function showPWAInstallBanner() {
             const { outcome } = await deferredPrompt.userChoice;
 
             if (outcome === 'accepted') {
-                console.log('✅ User accepted PWA install');
                 localStorage.setItem('pwa-installed', 'true');
                 localStorage.removeItem('pwa-prompt-dismiss-time');
                 showNotification('✅ App installed successfully!', 'success');
             } else {
-                console.log('❌ User dismissed PWA install');
                 localStorage.setItem('pwa-prompt-dismiss-time', Date.now().toString());
             }
         } catch (error) {
@@ -2439,10 +2496,11 @@ function showPWAInstallBanner() {
 }
 
 
+
 function hidePWAInstallBanner() {
     const banner = document.getElementById('pwa-install-banner');
     if (banner) {
-        banner.style.animation = 'slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+        banner.style.animation = 'slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
         setTimeout(() => banner.remove(), 400);
     }
 }
