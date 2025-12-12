@@ -15,6 +15,9 @@ const LANGUAGES = {
     "ar": "العربية"
 };
 
+const VAPID_PUBLIC_KEY = 'BGR8PSUhEMD5Jij2vMHJamrLlnPZAi26RDhWCRLYKr0J_Cl2L7pZjgbqTHxKqzqU4bMYLNibnl4ltPQzIFkr0-c';
+
+
 function initDailyBriefingButton() {
     if (initDailyBriefingButton.initialized) return;
     initDailyBriefingButton.initialized = true;
@@ -693,6 +696,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     initDeleteAccount();
     initLogout();
     initClearChat();
+    
+    console.log('✅ App initialized, checking PWA status...');
+    
+    if (checkPWAStatus()) {
+        console.log('✅ PWA is installed, scheduling notification check...');
+        setTimeout(() => {
+            checkAndPromptNotifications().catch(err => console.error('Notification prompt error:', err));
+        }, 3000);
+    } else {
+        console.log('ℹ️ PWA not installed yet, waiting for installation...');
+    }
 });
 
 setTimeout(() => checkAndPromptPWA(), 2000);
@@ -766,8 +780,10 @@ window.testNotifications.showPrompt = () => {
 };
 
 function initPWAInstallPrompt() {
-    
     if (checkPWAStatus()) {
+        setTimeout(() => {
+            checkAndPromptNotifications().catch(err => console.error('Notification prompt error:', err));
+        }, 2000);
         return;
     }
 
@@ -778,7 +794,6 @@ function initPWAInstallPrompt() {
         setTimeout(() => {
             console.log('📢 Showing PWA banner...');
             showPWAInstallBanner();
-            checkAndPromptNotifications().catch(err => console.error('Notification prompt error:', err));
         }, 1000);
     });
 
@@ -787,6 +802,10 @@ function initPWAInstallPrompt() {
         localStorage.removeItem('pwa-prompt-dismiss-time');
         hidePWAInstallBanner();
         deferredPrompt = null;
+        
+        setTimeout(() => {
+            checkAndPromptNotifications().catch(err => console.error('Notification prompt error:', err));
+        }, 2000);
     });
     
     setTimeout(() => {
@@ -832,60 +851,92 @@ function promptNotificationPermission() {
 
 
 function showNotificationModal() {
-    // avoid duplicate modals
-    if (document.getElementById('lerri-notification-modal')) return;
+    if (document.getElementById('lerri-notification-modal')) {
+        console.log('⚠️ Modal already exists, skipping');
+        return;
+    }
 
     const container = document.createElement('div');
     container.id = 'lerri-notification-modal';
-    container.style.position = 'fixed';
-    container.style.inset = '0';
-    container.style.background = 'rgba(0,0,0,0.5)';
-    container.style.display = 'flex';
-    container.style.alignItems = 'center';
-    container.style.justifyContent = 'center';
-    container.style.zIndex = '9999';
+    container.style.cssText = `
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        animation: fadeIn 0.3s ease-out;
+    `;
 
     container.innerHTML = `
-        <div style="background:#fff;border-radius:12px;padding:20px;max-width:420px;width:90%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.2)">
-            <div style="font-size:36px;margin-bottom:8px">🔔</div>
-            <h3 style="margin:0 0 8px">Abilita notifiche</h3>
-            <p style="color:#555;margin:0 0 16px">Per ricevere aggiornamenti e promemoria, abilita le notifiche. Puoi disattivarle in qualsiasi momento.</p>
-            <div style="display:flex;gap:10px;justify-content:center">
-                <button id="lerri-notif-enable" style="background:#4CAF50;color:#fff;border:none;padding:10px 16px;border-radius:8px;cursor:pointer">Abilita</button>
-                <button id="lerri-notif-dismiss" style="background:#eee;border:none;padding:10px 16px;border-radius:8px;cursor:pointer">Rifiuta</button>
+        <div style="background:#fff;border-radius:16px;padding:30px;max-width:420px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+            <div style="font-size:48px;margin-bottom:16px">🔔</div>
+            <h3 style="margin:0 0 12px;font-size:1.5rem;color:#1a202c">Enable Notifications</h3>
+            <p style="color:#718096;margin:0 0 20px;line-height:1.6">Stay updated with daily briefings, task reminders, and important alerts. You can disable them anytime.</p>
+            <div style="display:flex;gap:12px;justify-content:center">
+                <button id="lerri-notif-enable" style="background:#667eea;color:#fff;border:none;padding:12px 24px;border-radius:10px;cursor:pointer;font-weight:600;font-size:1rem;transition:all 0.2s">Enable</button>
+                <button id="lerri-notif-dismiss" style="background:#e2e8f0;color:#4a5568;border:none;padding:12px 24px;border-radius:10px;cursor:pointer;font-weight:500;font-size:1rem;transition:all 0.2s">Not Now</button>
             </div>
         </div>
     `;
 
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        #lerri-notif-enable:hover {
+            background: #5568d3 !important;
+            transform: translateY(-1px);
+        }
+        #lerri-notif-dismiss:hover {
+            background: #cbd5e0 !important;
+        }
+    `;
+    document.head.appendChild(style);
+
     document.body.appendChild(container);
+    console.log('✅ Notification modal displayed');
 
     const cleanup = () => {
-        const el = document.getElementById('lerri-notification-modal');
-        if (el) el.remove();
+        container.style.animation = 'fadeOut 0.3s ease-out';
+        setTimeout(() => {
+            const el = document.getElementById('lerri-notification-modal');
+            if (el) el.remove();
+        }, 300);
     };
 
     document.getElementById('lerri-notif-dismiss').addEventListener('click', () => {
-        console.log('🧪 Notification prompt dismissed by user');
+        console.log('❌ Notification prompt dismissed by user');
+        localStorage.setItem('notification-prompt-dismiss-time', Date.now().toString());
         cleanup();
     });
 
     document.getElementById('lerri-notif-enable').addEventListener('click', async () => {
         try {
-            console.log('📬 Requesting Notification permission...');
+            const btn = document.getElementById('lerri-notif-enable');
+            btn.disabled = true;
+            btn.textContent = '⏳ Enabling...';
+            
+            console.log('📬 Requesting notification permission...');
             const result = await Notification.requestPermission();
-            console.log('📬 Notification.requestPermission result:', result);
+            console.log('📬 Permission result:', result);
+            
             if (result === 'granted') {
-                localStorage.removeItem('notification-prompt-dismiss-time');
-                await ensurePushSubscription();
-                console.log('✅ Notifications enabled');
-            } else if (result === 'denied') {
-                localStorage.setItem('notification-prompt-dismiss-time', Date.now().toString());
-                console.log('❌ Notifications denied');
-            } else {
-                console.log('ℹ️ Notification permission dismissed/closed');
+                console.log('✅ Notifications granted - subscribing to push');
+                const success = await ensurePushSubscription();
+                if (success) {
+                    showNotification('✅ Notifications enabled!', 'success');
+                }
             }
         } catch (err) {
-            console.error('❌ Error requesting notification permission:', err);
+            console.error('❌ Error:', err);
         } finally {
             cleanup();
         }
@@ -925,53 +976,96 @@ async function checkAndPromptPWA() {
 }
 
 async function checkAndPromptNotifications() {
-    const status = checkNotificationStatus();
+    console.log('🔔 Checking notification status...');
     
-    if (status === 'unsupported') return console.log('❌ Notifications not supported');
+    const status = checkNotificationStatus();
+    console.log('📊 Notification permission:', status);
+    
+    if (status === 'unsupported') {
+        console.log('❌ Notifications not supported in this browser');
+        return;
+    }
+    
     if (status === 'granted') {
+        console.log('✅ Notifications already granted, ensuring subscription...');
         await ensurePushSubscription();
         return;
     }
-    if (status === 'denied') return console.log('❌ Notifications denied');
+    
+    if (status === 'denied') {
+        console.log('❌ Notifications denied by user');
+        return;
+    }
 
-    promptNotificationPermission();
+    const dismissTime = localStorage.getItem('notification-prompt-dismiss-time');
+    const daysSinceDismiss = dismissTime ? (Date.now() - parseInt(dismissTime, 10)) / (1000 * 60 * 60 * 24) : 999;
+    
+    console.log('📅 Days since last dismiss:', daysSinceDismiss.toFixed(2));
+    
+    if (daysSinceDismiss < 7) {
+        console.log('⏳ User dismissed recently, waiting 7 days before asking again');
+        return;
+    }
+
+    console.log('✅ Showing notification prompt...');
+    setTimeout(() => {
+        promptNotificationPermission();
+    }, 1000);
 }
-
 
 async function ensurePushSubscription() {
     try {
-        if (!('serviceWorker' in navigator)) {
-            console.log('❌ SW not supported - cannot subscribe to push');
-            return;
-        }
+        if (!('serviceWorker' in navigator)) return false;
+        
         const registration = await navigator.serviceWorker.getRegistration();
-        if (!registration) {
-            console.log('❌ No SW registration found');
-            return;
-        }
+        if (!registration) return false;
 
         const existing = await registration.pushManager.getSubscription();
         if (existing) {
             console.log('✅ Push subscription already exists');
-            return existing;
+            return true;
         }
 
-        // If you have a VAPID key, set it here. If not, skip actual subscribe but still mark permission.
-        const VAPID_PUBLIC_KEY = window.PUSH_VAPID_PUBLIC_KEY || null;
-        if (!VAPID_PUBLIC_KEY) {
-            console.log('⚠️ No VAPID key provided; skipping automatic push subscribe (only permission recorded)');
-            return null;
-        }
-
+        const VAPID_KEY = 'BGR8PSUhEMD5Jij2vMHJamrLlnPZAi26RDhWCRLYKr0J_Cl2L7pZjgbqTHxKqzqU4bMYLNibnl4ltPQzIFkr0-c';
+        
         const sub = await registration.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+            applicationServerKey: urlBase64ToUint8Array(VAPID_KEY)
         });
-        console.log('✅ Push subscription created', sub);
-        // Optionally send subscription to backend here
-        return sub;
+        
+        console.log('✅ Push subscription created');
+        
+        const email = getUserEmail();
+        if (email) {
+            await sendSubscriptionToBackend(email, sub);
+        }
+        
+        return true;
     } catch (err) {
         console.error('❌ ensurePushSubscription error:', err);
+        return false;
+    }
+}
+
+async function sendSubscriptionToBackend(email, subscription) {
+    try {
+        console.log('📤 Sending subscription to backend');
+        const response = await fetch('https://api.lerriai.com/api/subscribe-notifications', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, subscription })
+        });
+        
+        if (!response.ok) {
+            console.error('❌ Backend error:', response.status);
+            return false;
+        }
+        
+        console.log('✅ Subscription saved to backend');
+        return true;
+    } catch (error) {
+        console.error('❌ sendSubscriptionToBackend error:', error);
+        return false;
     }
 }
 
@@ -2076,11 +2170,15 @@ async function initServiceWorker() {
         try {
             const registration = await navigator.serviceWorker.register('./sw.js');
             console.log('✅ Service Worker registered:', registration.scope);
-
-            checkAndPromptNotifications().catch(err => console.error('Notification prompt error:', err));
             
+            await navigator.serviceWorker.ready;
+            console.log('✅ Service Worker ready');
+
             if (checkPWAStatus()) {
-                await promptNotificationPermission();
+                console.log('✅ PWA detected in SW init, checking notifications...');
+                setTimeout(() => {
+                    checkAndPromptNotifications().catch(err => console.error('Notification prompt error:', err));
+                }, 2000);
             }
             
         } catch (error) {
@@ -2428,33 +2526,7 @@ function hidePWAInstallBanner() {
     }
 }
 
-const VAPID_PUBLIC_KEY = 'BGR8PSUhEMD5Jij2vMHJamrLlnPZAi26RDhWCRLYKr0J_Cl2L7pZjgbqTHxKqzqU4bMYLNibnl4ltPQzIFkr0-c';
 
-async function subscribeUserToPush() {
-    try {
-        const registration = await navigator.serviceWorker.ready;
-        
-        const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-        });
-        
-        await fetch('https://api.lerriai.com/api/subscribe-notifications', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                email: getUserEmail(),
-                subscription: subscription
-            })
-        });
-        
-        console.log('✅ Subscribed to push notifications');
-        return true;
-    } catch (error) {
-        console.error('Push subscription error:', error);
-        return false;
-    }
-}
 
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
