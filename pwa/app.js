@@ -772,11 +772,34 @@ function checkPWAStatus() {
 }
 
 
-window.testNotifications = window.testNotifications || {};
-window.testNotifications.showPrompt = () => {
+window.testPWA = window.testPWA || {};
+window.testPWA.reset = () => {
+    localStorage.removeItem('pwa-installed');
+    localStorage.removeItem('pwa-prompt-dismiss-time');
     localStorage.removeItem('notification-prompt-dismiss-time');
-    console.log('🧪 Forcing notification prompt display');
+    console.log('✅ Reset flags - ora ricarica la pagina (F5)');
+};
+
+window.testPWA.showBanner = () => {
+    if (deferredPrompt) {
+        showPWAInstallBanner();
+        console.log('✅ PWA banner shown');
+    } else {
+        console.log('⚠️ No deferredPrompt');
+    }
+};
+
+window.testPWA.forceNotifications = () => {
+    localStorage.removeItem('notification-prompt-dismiss-time');
     showNotificationModal();
+    console.log('✅ Notification modal forced');
+};
+
+window.testPWA.status = () => {
+    console.log('PWA installed:', localStorage.getItem('pwa-installed'));
+    console.log('PWA dismiss time:', localStorage.getItem('pwa-prompt-dismiss-time'));
+    console.log('Notif deny time:', localStorage.getItem('notification-prompt-dismiss-time'));
+    console.log('Notification permission:', Notification.permission);
 };
 
 function initPWAInstallPrompt() {
