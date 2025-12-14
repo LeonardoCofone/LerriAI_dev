@@ -1336,9 +1336,16 @@ function initChat() {
                                 })
                             });
                             
-                            if (!response.ok) throw new Error(await response.text());
                             const data = await response.json();
-                            
+
+                            if (!response.ok) {
+                                if (data && data.error) {
+                                    throw new Error(data.error);
+                                } else {
+                                    throw new Error(`Server error: ${response.statusText}`);
+                                }
+                            }
+
                             const transcribedText = data.transcription || '';
                             const aiReply = data.value || data.reply || '';
                             
@@ -1390,7 +1397,8 @@ function initChat() {
                             
                         } catch (error) {
                             transcribingMsg.remove();
-                            addMessage('❌ Transcription error. Try again.', 'bot');
+                            // Mostra un messaggio di errore più specifico.
+                            addMessage(`❌ Si è verificato un errore: ${error.message}. Riprova.`, 'bot');
                             console.error("Audio error:", error);
                         }
                     };
@@ -1484,7 +1492,7 @@ function initChat() {
                     message: optimizedPrompt,
                     email: getUserEmail(),
                     user_id: getUserIdentifier(),
-                    files: filesData
+                    files: filesData.length > 0 ? filesData : undefined
                 })
             });
 
