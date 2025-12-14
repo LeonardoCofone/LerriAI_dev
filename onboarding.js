@@ -1113,7 +1113,7 @@ async function finishSetup() {
 
         if (response.ok) {
             setTimeout(() => {
-                window.location.href = '/pwa/index.html';
+                window.location.href = 'pwa/index.html';   //DA CAMBBIAREEE
             }, 2000);
         } else {
             throw new Error('Onboarding failed');
@@ -1122,7 +1122,7 @@ async function finishSetup() {
         console.error('Onboarding error:', error);
         showToast('⚠️ Something went wrong. Redirecting anyway...');
         setTimeout(() => {
-            window.location.href = '/pwa/index.html';
+            window.location.href = 'pwa/index.html';
         }, 1000);
     }
 }
