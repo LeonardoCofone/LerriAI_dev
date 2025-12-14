@@ -1288,7 +1288,22 @@ function initChat() {
                 mediaRecorder.onstop = async () => {
                     chatInput.placeholder = 'Write a message...';
                     chatInput.disabled = false;
-                    
+
+                    try {
+                        const trialStatus = await checkTrialStatus();
+                        if (!trialStatus.canSendMessage) {
+                            await showSubscriptionModal(); // Mostra il popup di abbonamento
+                            
+                            // Spegni il microfono e ferma tutto
+                            if (typeof stream !== 'undefined') {
+                                stream.getTracks().forEach(track => track.stop());
+                            }
+                            return; // ESCE DALLA FUNZIONE QUI (non invia nulla)
+                        }
+                    } catch (err) {
+                        console.error("Errore verifica trial vocale:", err);
+                    }
+                                    
                     const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                     const durationMs = Date.now() - startTime;
                     const durationSeconds = Math.round(durationMs / 1000);
