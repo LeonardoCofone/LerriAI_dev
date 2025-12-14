@@ -1013,6 +1013,7 @@ To enable them:
 - Alternatively open: chrome://settings/content/notifications and remove this site from the blocked list.
 - Firefox: Click the info icon (i) → Permissions → Notifications → Allow.
 - You can also test in an Incognito/Private window or another browser profile.
+- Or just ask Lerri how to do it! ;)
 
 After changing the setting, reload this page and click Enable.`;
 
@@ -1020,16 +1021,85 @@ After changing the setting, reload this page and click Enable.`;
     container.id = 'lerri-notif-denied-modal';
     container.style.cssText = `position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:10001;background:rgba(0,0,0,0.6);`;
     container.innerHTML = `
-        <div style="background:#fff;border-radius:12px;padding:20px;max-width:560px;width:94%;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:left">
-            <h3 style="margin-top:0">Notifications blocked</h3>
-            <p style="color:#4a5568;white-space:pre-wrap;margin-bottom:12px">${instructions}</p>
-            <div style="display:flex;gap:8px;justify-content:flex-end">
-                <button id="lerri-copy-notif-instr" style="padding:8px 12px;border-radius:8px;border:1px solid #e2e8f0;background:#f7fafc;cursor:pointer">Copy instructions</button>
-                <a id="lerri-open-notif-settings" href="chrome://settings/content/notifications" target="_blank" style="padding:8px 12px;border-radius:8px;border:1px solid #e2e8f0;background:#edf2ff;color:#2b6cb0;text-decoration:none;display:inline-flex;align-items:center;">Open settings</a>
-                <button id="lerri-close-notif-instr" style="padding:8px 12px;border-radius:8px;background:#e2e8f0;border:none;cursor:pointer">Close</button>
+            <div style="
+                background:#ffffff;
+                border-radius:14px;
+                padding:28px;
+                max-width:600px;
+                width:92%;
+                box-shadow:0 25px 70px rgba(0,0,0,0.35);
+                text-align:left;
+                font-family:Inter, Arial, sans-serif;
+                color:#111;
+                animation:fadeIn 0.25s ease-out;
+            ">
+                <h3 style="
+                    margin-top:0;
+                    margin-bottom:10px;
+                    font-size:22px;
+                    font-weight:700;
+                    color:#000;
+                ">Notifications blocked</h3>
+
+                <p style="
+                    color:#2d3748;
+                    white-space:pre-wrap;
+                    margin-bottom:18px;
+                    line-height:1.55;
+                    font-size:15px;
+                ">${instructions}</p>
+
+                <div style="
+                    display:flex;
+                    gap:10px;
+                    justify-content:flex-end;
+                    margin-top:20px;
+                ">
+
+                    <button id="lerri-copy-notif-instr" style="
+                        padding:9px 14px;
+                        border-radius:8px;
+                        border:1px solid #d1d5db;
+                        background:#f8f9fa;
+                        font-size:14px;
+                        cursor:pointer;
+                        transition:0.2s;
+                    " onmouseover="this.style.background='#eceff1'"
+                    onmouseout="this.style.background='#f8f9fa'">Copy instructions</button>
+
+                    <a id="lerri-open-notif-settings"
+                    href="chrome://settings/content/notifications"
+                    target="_blank"
+                    style="
+                        padding:9px 14px;
+                        border-radius:8px;
+                        border:1px solid #c3d3ff;
+                        background:#e8f0ff;
+                        color:#1a56db;
+                        text-decoration:none;
+                        font-size:14px;
+                        display:inline-flex;
+                        align-items:center;
+                        transition:0.2s;
+                    "
+                    onmouseover="this.style.background='#d9e6ff'"
+                    onmouseout="this.style.background='#e8f0ff'">Open settings</a>
+
+                    <button id="lerri-close-notif-instr" style="
+                        padding:9px 14px;
+                        border-radius:8px;
+                        background:#e5e7eb;
+                        border:none;
+                        font-size:14px;
+                        cursor:pointer;
+                        transition:0.2s;
+                    " onmouseover="this.style.background='#d5d7db'"
+                    onmouseout="this.style.background='#e5e7eb'">Close</button>
+
+                </div>
             </div>
-        </div>
-    `;
+        `;
+
 
     document.body.appendChild(container);
 

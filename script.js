@@ -67,42 +67,6 @@ anime({
     easing: 'easeInOutQuad'
 });
 
-// Smooth scroll per i link di navigazione
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            const offset = 80; // Altezza della navbar
-            const targetPosition = target.offsetTop - offset;
-            
-            anime({
-                targets: 'html, body',
-                scrollTop: targetPosition,
-                duration: 800,
-                easing: 'easeInOutQuad'
-            });
-        }
-    });
-});
-
-// Effetto parallax leggero per l'hero
-window.addEventListener('scroll', () => {
-    const scrolled = window.pageYOffset;
-    const heroContent = document.querySelector('.hero-content');
-    const floatingCards = document.querySelectorAll('.floating-card');
-    
-    if (heroContent) {
-        heroContent.style.transform = `translateY(${scrolled * 0.5}px)`;
-        heroContent.style.opacity = 1 - (scrolled / 600);
-    }
-    
-    floatingCards.forEach((card, index) => {
-        const speed = 0.3 + (index * 0.1);
-        card.style.transform = `translateY(${scrolled * speed}px)`;
-    });
-});
-
 // Animazione per il pricing card quando entra in viewport
 const pricingCard = document.querySelector('.pricing-card');
 if (pricingCard) {
@@ -179,54 +143,14 @@ if (ctaForm) {
 // Navbar shadow on scroll
 const navbar = document.querySelector('.navbar');
 window.addEventListener('scroll', () => {
-    if (window.scrollY > 100) {
-        navbar.style.boxShadow = '0 4px 30px rgba(0, 0, 0, 0.15)';
+    if (window.scrollY > 50) {
+        navbar.style.background = 'rgba(255,255,255,0.95)';
+        navbar.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08)';
     } else {
-        navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
+        navbar.style.background = 'rgba(255,255,255,0.8)';
+        navbar.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
     }
 });
-
-// Animazione contatori (se vuoi aggiungere statistiche animate)
-function animateCounter(element, target, duration = 2000) {
-    anime({
-        targets: element,
-        innerHTML: [0, target],
-        round: 1,
-        duration: duration,
-        easing: 'easeOutExpo'
-    });
-}
-
-// Particle effect leggero per l'hero (opzionale)
-function createParticles() {
-    const hero = document.querySelector('.hero');
-    const particleCount = 30;
-    
-    for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement('div');
-        particle.style.position = 'absolute';
-        particle.style.width = Math.random() * 4 + 2 + 'px';
-        particle.style.height = particle.style.width;
-        particle.style.background = 'rgba(255, 255, 255, 0.3)';
-        particle.style.borderRadius = '50%';
-        particle.style.left = Math.random() * 100 + '%';
-        particle.style.top = Math.random() * 100 + '%';
-        particle.style.pointerEvents = 'none';
-        
-        hero.appendChild(particle);
-        
-        anime({
-            targets: particle,
-            translateY: [0, -100 - Math.random() * 100],
-            translateX: [0, (Math.random() - 0.5) * 100],
-            opacity: [0.3, 0],
-            duration: 3000 + Math.random() * 2000,
-            loop: true,
-            delay: Math.random() * 2000,
-            easing: 'linear'
-        });
-    }
-}
 
 
 async function registerUser(email, preferred_name) {
@@ -267,6 +191,22 @@ if (registerForm) {
         }
     });
 }
-if (window.innerWidth > 768) {
-    createParticles();
-}
+
+        // Smooth scroll per link con hash (es. Get Started -> #pricing)
+        document.querySelectorAll('a[href*="#"]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                try {
+                    const url = new URL(this.href, location.href);
+                    if ((url.pathname === location.pathname || url.pathname === '' || url.pathname === '/') && url.hash) {
+                        const target = document.querySelector(url.hash);
+                        if (target) {
+                            e.preventDefault();
+                            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            if (history.pushState) history.pushState(null, '', url.hash);
+                        }
+                    }
+                } catch (err) {
+                    // fallback: nulla
+                }
+            });
+        });

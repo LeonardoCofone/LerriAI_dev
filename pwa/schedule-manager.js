@@ -44,6 +44,11 @@ let selectedSlots = new Set();
 let currentEditingSlot = null;
 let selectedSlotEmoji = '🕒';
 
+let isDuplicating = false;
+let ghostElement = null;
+let duplicateStartX = 0;
+let originalDayIndex = -1;
+
 function timeToPixels(timeStr) {
     const [hours, minutes] = timeStr.split(':').map(Number);
     const minutesFromStart = (hours * 60 + minutes) - (VISIBLE_START_HOUR * 60);
@@ -432,6 +437,8 @@ function renderScheduleDaySlots(day) {
         slotEl.dataset.day = day;
         slotEl.style.top = startPx + 'px';
         slotEl.style.height = height + 'px';
+        const durationMinutes = timeToMinutes(slot.end) - timeToMinutes(slot.start);
+        const showHints = durationMinutes >= 180;
 
         slotEl.innerHTML = `
             <input type="checkbox" class="slot-checkbox" data-slot-id="${slot.id}" ${selectedSlots.has(slot.id) ? 'checked' : ''}>
@@ -439,6 +446,17 @@ function renderScheduleDaySlots(day) {
                 <div class="slot-time">${slot.start} - ${slot.end}</div>
                 ${slot.emoji || slot.name ? `<div class="slot-info">${slot.emoji} ${slot.name}</div>` : ''}
             </div>
+            ${showHints ? `
+                <div class="slot-hints">
+                    <div class="slot-hint-top">▲ Move</div>
+                    <div class="slot-hint-sides">
+                        <span>◀</span>
+                        <span>Copy</span>
+                        <span>▶</span>
+                    </div>
+                    <div class="slot-hint-bottom">▼ Resize</div>
+                </div>
+            ` : ''}
             <div class="slot-resize-handle"></div>
         `;
 
@@ -484,8 +502,13 @@ let resizedSlot = null;
 let recentlyDragged = false;
 
 function startScheduleDrag(e, slot, slotEl) {
+    const dayColumn = slotEl.closest('.day-column');
+    const dayGrid = dayColumn.querySelector('.day-grid');
+    originalDayIndex = dayNames.indexOf(dayGrid.dataset.day);
+    
     draggedSlot = { slot, slotEl, startY: e.clientY, startX: e.clientX, moved: false };
     dragStartY = e.clientY;
+    duplicateStartX = e.clientX;
     slotEl.classList.add('dragging');
     document.addEventListener('mousemove', onScheduleDragMove);
     document.addEventListener('mouseup', onScheduleDragEnd);
@@ -493,6 +516,7 @@ function startScheduleDrag(e, slot, slotEl) {
     document.addEventListener('touchend', onScheduleDragEnd);
     e.preventDefault();
 }
+
 
 function onScheduleDragMove(e) {
     if (!draggedSlot) return;
@@ -507,17 +531,72 @@ function onScheduleDragMove(e) {
     if (!draggedSlot.moved && distance < DRAG_THRESHOLD) return;
 
     draggedSlot.moved = true;
-    const deltaY = clientY - dragStartY;
-    const currentTop = parseInt(draggedSlot.slotEl.style.top) || 0;
-    const newTop = Math.max(0, currentTop + deltaY);
-    draggedSlot.slotEl.style.top = newTop + 'px';
-    dragStartY = clientY;
+    
+    const horizontalDelta = Math.abs(clientX - duplicateStartX);
+    
+    if (horizontalDelta > 80 && !isDuplicating) {
+        isDuplicating = true;
+        
+        if (!ghostElement) {
+            ghostElement = document.createElement('div');
+            ghostElement.className = 'slot-ghost';
+            ghostElement.textContent = draggedSlot.slot.emoji || '📋';
+            document.body.appendChild(ghostElement);
+        }
+    }
+    
+    if (isDuplicating && ghostElement) {
+        ghostElement.style.left = (clientX - ghostElement.offsetWidth / 2) + 'px';
+        ghostElement.style.top = (clientY - ghostElement.offsetHeight / 2) + 'px';
+    } else if (!isDuplicating) {
+        const deltaY = clientY - dragStartY;
+        const currentTop = parseInt(draggedSlot.slotEl.style.top) || 0;
+        const newTop = Math.max(0, currentTop + deltaY);
+        draggedSlot.slotEl.style.top = newTop + 'px';
+        dragStartY = clientY;
+    }
 }
 
-function onScheduleDragEnd() {
+function onScheduleDragEnd(e) {
     if (!draggedSlot) return;
     const wasMoved = !!draggedSlot.moved;
-    if (wasMoved) {
+    
+    if (ghostElement) {
+        ghostElement.remove();
+        ghostElement = null;
+    }
+    
+    if (isDuplicating && wasMoved) {
+        const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+        const dayColumns = document.querySelectorAll('#schedWeeklyCalendar .day-column');
+        let targetDayIndex = -1;
+        
+        dayColumns.forEach((col, idx) => {
+            const rect = col.getBoundingClientRect();
+            if (clientX >= rect.left && clientX <= rect.right) {
+                targetDayIndex = idx;
+            }
+        });
+        
+        if (targetDayIndex !== -1 && targetDayIndex !== originalDayIndex) {
+            const targetDay = dayNames[targetDayIndex];
+            const originalSlot = draggedSlot.slot;
+            const newSlot = createSlot(
+                targetDay,
+                originalSlot.start,
+                originalSlot.end,
+                originalSlot.name,
+                originalSlot.emoji,
+                originalSlot.description
+            );
+            scheduleSlots[targetDay].push(newSlot);
+            renderScheduleDaySlots(targetDay);
+            showScheduleToast(`✅ Slot duplicated to ${dayNamesDisplay[targetDay]}!`);
+        }
+        
+        renderScheduleDaySlots(draggedSlot.slot.day);
+        
+    } else if (wasMoved && !isDuplicating) {
         const newTop = parseInt(draggedSlot.slotEl.style.top) || 0;
         const newStart = pixelsToTime(newTop);
         const duration = timeToMinutes(draggedSlot.slot.end) - timeToMinutes(draggedSlot.slot.start);
@@ -533,7 +612,9 @@ function onScheduleDragEnd() {
         draggedSlot.slotEl.classList.remove('dragging');
     }
 
+    isDuplicating = false;
     draggedSlot = null;
+    originalDayIndex = -1;
     document.removeEventListener('mousemove', onScheduleDragMove);
     document.removeEventListener('mouseup', onScheduleDragEnd);
     document.removeEventListener('touchmove', onScheduleDragMove);
