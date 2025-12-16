@@ -16,6 +16,116 @@ const LANGUAGES = {
 };
 
 const VAPID_PUBLIC_KEY = 'BGR8PSUhEMD5Jij2vMHJamrLlnPZAi26RDhWCRLYKr0J_Cl2L7pZjgbqTHxKqzqU4bMYLNibnl4ltPQzIFkr0-c';
+let isProcessing = false;
+function setProcessingState(processing) {
+    isProcessing = processing;
+    
+    const chatInput = document.getElementById('chat-input');
+    const micBtn = document.getElementById('mic-btn');
+    const attachBtn = document.getElementById('attach-btn');
+    const briefingBtn = document.getElementById('daily-briefing-btn');
+    const submitBtn = document.querySelector('#chat-form button[type="submit"]');
+    
+    if (processing) {
+        if (chatInput) {
+            chatInput.disabled = true;
+            chatInput.style.opacity = '0.5';
+            chatInput.style.cursor = 'not-allowed';
+        }
+        if (micBtn) {
+            micBtn.disabled = true;
+            micBtn.style.opacity = '0.5';
+            micBtn.style.cursor = 'not-allowed';
+            micBtn.style.filter = 'grayscale(1)';
+        }
+        if (attachBtn) {
+            attachBtn.disabled = true;
+            attachBtn.style.opacity = '0.5';
+            attachBtn.style.cursor = 'not-allowed';
+            attachBtn.style.filter = 'grayscale(1)';
+        }
+        if (briefingBtn) {
+            briefingBtn.disabled = true;
+            briefingBtn.style.opacity = '0.5';
+            briefingBtn.style.cursor = 'not-allowed';
+            briefingBtn.style.filter = 'grayscale(1)';
+        }
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.5';
+            submitBtn.style.cursor = 'not-allowed';
+            submitBtn.style.background = '#94a3b8';
+        }
+    } else {
+        if (chatInput) {
+            chatInput.disabled = false;
+            chatInput.style.opacity = '';
+            chatInput.style.cursor = '';
+        }
+        if (micBtn) {
+            micBtn.disabled = false;
+            micBtn.style.opacity = '';
+            micBtn.style.cursor = '';
+            micBtn.style.filter = '';
+        }
+        if (attachBtn) {
+            attachBtn.disabled = false;
+            attachBtn.style.opacity = '';
+            attachBtn.style.cursor = '';
+            attachBtn.style.filter = '';
+        }
+        if (briefingBtn) {
+            briefingBtn.disabled = false;
+            briefingBtn.style.opacity = '';
+            briefingBtn.style.cursor = '';
+            briefingBtn.style.filter = '';
+        }
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '';
+            submitBtn.style.cursor = '';
+            submitBtn.style.background = '';
+        }
+    }
+}
+
+
+async function sendNotificationReale(title, body, data = {}) {
+    if (!('serviceWorker' in navigator)) return;
+    if (Notification.permission !== 'granted') return;
+    
+    try {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification(title, {
+            body: body.substring(0, 100) + (body.length > 100 ? '...' : ''), // Max 100 caratteri
+            icon: '/pwa/icon/icon-192.png',
+            badge: '/pwa/icon/icon-192.png',
+            vibrate: [200, 100, 200],
+            tag: 'lerri-notification',
+            requireInteraction: false,
+            data: data
+        });
+    } catch (error) {
+        console.error('Notification error:', error);
+    }
+}
+
+// Dopo sendNotificationReale()
+async function initNotifications() {
+    if ('serviceWorker' in navigator && 'Notification' in window) {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            console.log('✅ Notifications enabled');
+            const sub = await ensurePushSubscription();
+            if (sub) {
+                await sendSubscriptionToBackend(getUserEmail(), sub);
+            }
+        }
+    }
+}
+
+// Usage:
+//sendNotificationReale('Daily Briefing', 'Your schedule is ready!', { url: '/pwa/index.html' });
 
 
 function initDailyBriefingButton() {
@@ -107,6 +217,8 @@ function initDailyBriefingButton() {
     }
 
     briefingBtn.addEventListener('click', async () => {
+        if (isProcessing) return;
+
         const email = getUserEmail();
         if (!email) {
             showNotification('❌ Please login first', 'error');
@@ -120,6 +232,8 @@ function initDailyBriefingButton() {
             addMessage('⚠️ You have reached your monthly spending limit. Increase your budget in your settings to continue.', 'bot', false);
             return;
         }
+
+        setProcessingState(true);
 
         briefingBtn.disabled = true;
         briefingBtn.innerHTML = '⏳';
@@ -165,8 +279,7 @@ function initDailyBriefingButton() {
             console.error('Briefing error:', error);
             showNotification('❌ Failed to generate briefing. Try again.', 'error');
         } finally { 
-            briefingBtn.disabled = false;
-            briefingBtn.innerHTML = '📊';
+            setProcessingState(false);
         }
     });
 }
@@ -494,6 +607,11 @@ function addMessage(text, sender, save = true, audioBlob = null, skipSync = fals
     } else if (save) { 
         messagesArray.push({ text, sender });
         if (messagesArray.length > 25) messagesArray = messagesArray.slice(-25);
+    }
+
+    if (sender === 'bot' && text !== "⏳ Processing..." && document.hidden) {
+        const preview = text.replace(/[*_~`#]/g, '').substring(0, 80);
+        sendNotificationReale('New message from Lerri', preview, { url: '/pwa/index.html' });
     }
 
     
@@ -1176,20 +1294,21 @@ async function ensurePushSubscription() {
     try {
         if (!('serviceWorker' in navigator)) return null;
         
-        const registration = await navigator.serviceWorker.getRegistration();
-        if (!registration) return null;
-
+        const registration = await navigator.serviceWorker.ready;
         const existing = await registration.pushManager.getSubscription();
         if (existing) {
-            console.log('✅ Push subscription already exists');
+            console.log('✅ Push subscription exists');
+            await sendSubscriptionToBackend(getUserEmail(), existing); // AGGIUNGI QUESTO
             return existing;
         }
+        
         const sub = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
         });
         
-        console.log('✅ Push subscription created:', sub);
+        console.log('✅ Push subscription created');
+        await sendSubscriptionToBackend(getUserEmail(), sub); // AGGIUNGI QUESTO
         return sub;
     } catch (err) {
         console.error('❌ ensurePushSubscription error:', err);
@@ -1270,6 +1389,8 @@ function initChat() {
     let startTime;
 
     micBtn.addEventListener("click", async () => {
+        if (isProcessing) return;
+
         if (!mediaRecorder || mediaRecorder.state === "inactive") {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -1303,6 +1424,8 @@ function initChat() {
                     } catch (err) {
                         console.error("Errore verifica trial vocale:", err);
                     }
+
+                    setProcessingState(true);
                                     
                     const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                     const durationMs = Date.now() - startTime;
@@ -1399,6 +1522,7 @@ function initChat() {
                             }
 
                             await syncToServer();
+                            setProcessingState(false);
                             updateStats();
                             updateBudgetDisplay();
                             
@@ -1431,6 +1555,8 @@ function initChat() {
     chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
+        if (isProcessing) return;
+        
         const msg = chatInput.value.trim();
         if (!msg && attachedFiles.length === 0) return;
 
@@ -1450,9 +1576,15 @@ function initChat() {
         const totalCost = textCost + filesCost;
 
         if (settings.currentSpend + totalCost > settings.maxSpend) {
-            addMessage('⚠️ Budget limit reached! Increase your maximum budget to continue.', 'bot');
+            addMessage('⚠️ Budget limit reached!', 'bot');
             return;
         }
+
+        setProcessingState(true);
+        const attachBtn = document.getElementById('attach-btn');
+        if (attachBtn) attachBtn.disabled = true;
+        const briefingBtn = document.getElementById('daily-briefing-btn');
+        if (briefingBtn) briefingBtn.disabled = true;
 
         const hasFiles = attachedFiles.length > 0;
         const filesList = attachedFiles.map(item => item.file.name).join(', ');
@@ -1534,7 +1666,6 @@ function initChat() {
 
             if (data.subscription) {
                 settings.subscription = data.subscription;
-                console.log('✅ Updated subscription from server:', settings.subscription);
             }
 
             await syncToServer();
@@ -1553,6 +1684,10 @@ function initChat() {
             }
             
             console.error("Chat error:", error);
+        } finally {
+            setProcessingState(false);
+            if (attachBtn) attachBtn.disabled = false;
+            if (briefingBtn) briefingBtn.disabled = false;
         }
     });
     initDailyBriefingButton();
