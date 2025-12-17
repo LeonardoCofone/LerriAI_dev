@@ -280,7 +280,7 @@ function initDailyBriefingButton() {
             updateBudgetDisplay();
 
             showNotification('✅ Daily briefing generated!', 'success');
-            
+
         } catch (error) {
             console.error('Briefing error:', error);
             showNotification('❌ Failed to generate briefing. Try again.', 'error');
@@ -1413,7 +1413,7 @@ function initChat() {
                 };
 
                 mediaRecorder.onstop = async () => {
-                    chatInput.placeholder = 'Write a message...';
+                    chatInput.placeholder = 'Ask Lerri...';
                     chatInput.disabled = false;
 
                     try {
