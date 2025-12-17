@@ -267,14 +267,20 @@ function initDailyBriefingButton() {
             settings.currentSpend += briefingCost;
             settings.currentSpend = Math.round(settings.currentSpend * 100000) / 100000;
 
+            if (data.subscription) {
+                settings.subscription = data.subscription;
+                console.log('✅ Updated subscription from briefing:', settings.subscription);
+            }
+
             console.log(`💰 Briefing cost: €${briefingCost.toFixed(5)}`);
 
             await syncToServer();
+            await updateTrialBanner();
             updateStats();
             updateBudgetDisplay();
 
             showNotification('✅ Daily briefing generated!', 'success');
-
+            
         } catch (error) {
             console.error('Briefing error:', error);
             showNotification('❌ Failed to generate briefing. Try again.', 'error');
@@ -1518,10 +1524,11 @@ function initChat() {
 
                             if (data.subscription) {
                                 settings.subscription = data.subscription;
-                                console.log('✅ Updated subscription from server:', settings.subscription);
+                                console.log('✅ Updated subscription from voice:', settings.subscription);
                             }
 
                             await syncToServer();
+                            await updateTrialBanner();
                             setProcessingState(false);
                             updateStats();
                             updateBudgetDisplay();
