@@ -18,6 +18,155 @@ const LANGUAGES = {
 const VAPID_PUBLIC_KEY = 'BGR8PSUhEMD5Jij2vMHJamrLlnPZAi26RDhWCRLYKr0J_Cl2L7pZjgbqTHxKqzqU4bMYLNibnl4ltPQzIFkr0-c';
 let isProcessing = false;
 
+//DEBUGGGGG
+// ============================================
+// AGGIUNGI QUESTO IN app.js per debugging
+// Poi usa window.debugNotifications() nella console
+// ============================================
+
+window.debugNotifications = async function() {
+    console.log('=== NOTIFICATION DEBUG ===');
+    
+    // 1. Check permessi
+    console.log('1. Notification permission:', Notification.permission);
+    
+    // 2. Check Service Worker
+    if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        console.log('2. Service Workers registered:', registrations.length);
+        
+        if (registrations.length > 0) {
+            const reg = registrations[0];
+            console.log('   - Scope:', reg.scope);
+            console.log('   - Active:', !!reg.active);
+            
+            // 3. Check Push Subscription
+            try {
+                const sub = await reg.pushManager.getSubscription();
+                console.log('3. Push subscription exists:', !!sub);
+                if (sub) {
+                    console.log('   - Endpoint:', sub.endpoint);
+                    console.log('   - Keys:', Object.keys(sub.toJSON()));
+                }
+            } catch (err) {
+                console.error('   - Error checking subscription:', err);
+            }
+        }
+    } else {
+        console.log('2. Service Workers NOT supported');
+    }
+    
+    // 4. Check variabili globali
+    console.log('4. currentPushSubscription:', !!currentPushSubscription);
+    console.log('   - Value:', currentPushSubscription);
+    
+    // 5. Check user data
+    const email = getUserEmail();
+    console.log('5. User email:', email);
+    
+    if (email) {
+        try {
+            const response = await fetch(`https://api.lerriai.com/api/load-data?user=${encodeURIComponent(email)}`);
+            const data = await response.json();
+            console.log('6. Server data:');
+            console.log('   - pushSubscription:', !!data.pushSubscription);
+            if (data.pushSubscription) {
+                console.log('   - Endpoint:', data.pushSubscription.endpoint);
+            }
+        } catch (err) {
+            console.error('6. Error loading data:', err);
+        }
+    }
+    
+    console.log('=== END DEBUG ===');
+};
+
+// ============================================
+// COMANDO PER TESTARE LA SUBSCRIPTION
+// ============================================
+
+window.testSubscription = async function() {
+    console.log('🧪 Testing subscription flow...');
+    
+    try {
+        // 1. Request permission
+        const permission = await Notification.requestPermission();
+        console.log('1. Permission:', permission);
+        
+        if (permission !== 'granted') {
+            console.log('❌ Permission denied');
+            return;
+        }
+        
+        // 2. Get Service Worker
+        const registration = await navigator.serviceWorker.ready;
+        console.log('2. Service Worker ready ✅');
+        
+        // 3. Create subscription
+        const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+        });
+        console.log('3. Subscription created ✅', subscription);
+        
+        // 4. Save to global variable
+        currentPushSubscription = subscription;
+        console.log('4. Global variable updated ✅');
+        
+        // 5. Send to backend
+        const email = getUserEmail();
+        if (email) {
+            const result = await sendSubscriptionToBackend(email, subscription);
+            console.log('5. Backend save:', result ? '✅' : '❌');
+        }
+        
+        // 6. Sync to server
+        await syncToServer();
+        console.log('6. Sync completed ✅');
+        
+        console.log('✅ All tests passed!');
+        
+    } catch (err) {
+        console.error('❌ Test failed:', err);
+    }
+};
+
+// ============================================
+// COMANDO PER INVIARE UNA NOTIFICA DI TEST
+// ============================================
+
+window.sendTestNotification = async function() {
+    const email = getUserEmail();
+    if (!email) {
+        console.log('❌ No user logged in');
+        return;
+    }
+    
+    try {
+        const response = await fetch('https://api.lerriai.com/api/send-notification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email,
+                title: '🧪 Test Notification',
+                body: 'If you see this, notifications are working! 🎉',
+                data: { url: '/pwa/index.html' }
+            })
+        });
+        
+        const data = await response.json();
+        console.log('Response:', data);
+        
+        if (data.success) {
+            console.log('✅ Test notification sent successfully!');
+        } else {
+            console.error('❌ Failed to send:', data.error);
+        }
+    } catch (err) {
+        console.error('❌ Error:', err);
+    }
+};
+
 function loadPayPalSDK() {
     if (window.paypalLoaded || document.querySelector('script[src*="paypal.com/sdk"]')) {
         return Promise.resolve();
@@ -746,16 +895,24 @@ function addMessage(text, sender, save = true, audioBlob = null, skipSync = fals
 }
 
 async function syncToServer() {
-    if (isSyncing) return;
+    if (isSyncing) {
+        console.log('⏳ Sync already in progress, skipping...');
+        return;
+    }
+    
     const user = getUserEmail();
-    if (!user) return;
+    if (!user) {
+        console.log('❌ No user email, cannot sync');
+        return;
+    }
 
     isSyncing = true;
+    console.log('🔄 Starting sync to server...');
 
     const payload = { 
         user, 
         events, 
-        pushSubscription: currentPushSubscription,
+        pushSubscription: currentPushSubscription, // ✅ Include la subscription
         tasks, 
         settings: {
             ...settings,
@@ -771,6 +928,13 @@ async function syncToServer() {
         messages: messagesArray 
     };
 
+    console.log('📦 Payload being sent:', {
+        user,
+        hasPushSubscription: !!currentPushSubscription,
+        eventsCount: Object.keys(events).length,
+        tasksCount: tasks.length
+    });
+
     try {
         const response = await fetch("https://api.lerriai.com/api/save-data", {
             method: "POST",
@@ -779,12 +943,14 @@ async function syncToServer() {
         });
         
         if (response.ok) {
-            console.log("✅ Sync completed - Trial:", settings.subscription?.trialMessagesUsed || 0);
+            console.log("✅ Sync completed successfully");
+            console.log("   - pushSubscription:", currentPushSubscription ? 'YES ✅' : 'NO ❌');
         } else {
-            console.error("❌ Sync failed:", await response.text());
+            const errorText = await response.text();
+            console.error("❌ Sync failed:", response.status, errorText);
         }
     } catch (err) {
-        console.error("Sync error:", err);
+        console.error("❌ Sync error:", err);
     } finally {
         isSyncing = false;
     }
@@ -1203,6 +1369,7 @@ function showNotificationModal() {
 
             console.log('📬 Requesting notification permission...');
 
+            // Check se già denied
             if (checkNotificationPermission() === 'denied') {
                 console.log('❌ Notifications permanently denied by user');
                 showNotificationDeniedInstructions();
@@ -1210,18 +1377,30 @@ function showNotificationModal() {
                 return;
             }
 
+            // Richiedi permesso
             const result = await Notification.requestPermission();
             console.log('📬 Permission result:', result);
 
             if (result === 'granted') {
                 console.log('✅ Notifications granted - subscribing to push');
                 
+                // Crea la push subscription
                 const subscription = await ensurePushSubscription();
                 
                 if (subscription) {
-                    console.log('✅ Push subscription obtained');
+                    console.log('✅ Push subscription obtained:', subscription);
+                    
+                    // IMPORTANTE: Aggiorna la variabile globale
                     currentPushSubscription = subscription;
                     
+                    // Invia al backend
+                    const email = getUserEmail();
+                    if (email) {
+                        const backendResult = await sendSubscriptionToBackend(email, subscription);
+                        console.log('📤 Backend save result:', backendResult);
+                    }
+                    
+                    // Sincronizza tutto (inclusa la subscription)
                     await syncToServer();
                     
                     console.log('✅ Subscription synced to server');
@@ -1237,7 +1416,7 @@ function showNotificationModal() {
             }
 
         } catch (err) {
-            console.error('❌ Error:', err);
+            console.error('❌ Notification enable error:', err);
             showNotification('⚠️ Notification setup error', 'error');
         } finally {
             cleanup();
@@ -1437,34 +1616,27 @@ async function ensurePushSubscription() {
             return null;
         }
         
+        console.log('🔄 Waiting for Service Worker...');
         const registration = await navigator.serviceWorker.ready;
+        console.log('✅ Service Worker ready');
+        
+        // Controlla se esiste già
         const existing = await registration.pushManager.getSubscription();
         
         if (existing) {
-            console.log('✅ Push subscription exists');
-            currentPushSubscription = existing;
-            
-            const email = getUserEmail();
-            if (email) {
-                await sendSubscriptionToBackend(email, existing);
-            }
-            
+            console.log('✅ Push subscription already exists');
             return existing;
         }
         
+        console.log('📝 Creating new push subscription...');
+        
+        // Crea nuova subscription
         const sub = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
         });
         
-        console.log('✅ Push subscription created');
-        currentPushSubscription = sub;
-        
-        const email = getUserEmail();
-        if (email) {
-            await sendSubscriptionToBackend(email, sub);
-        }
-        
+        console.log('✅ Push subscription created successfully');
         return sub;
         
     } catch (err) {
@@ -1476,15 +1648,20 @@ async function ensurePushSubscription() {
 async function sendSubscriptionToBackend(email, subscription) {
     try {
         console.log('📤 Sending subscription to backend for:', email);
+        console.log('📦 Subscription object:', JSON.stringify(subscription, null, 2));
         
         const response = await fetch('https://api.lerriai.com/api/subscribe-notifications', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, subscription })
+            body: JSON.stringify({ 
+                email, 
+                subscription: subscription.toJSON() // Converti in formato JSON standard
+            })
         });
         
         if (!response.ok) {
-            console.error('❌ Backend subscription save failed:', response.status);
+            const errorText = await response.text();
+            console.error('❌ Backend subscription save failed:', response.status, errorText);
             return false;
         }
         
