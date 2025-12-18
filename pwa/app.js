@@ -1369,7 +1369,6 @@ function showNotificationModal() {
 
             console.log('📬 Requesting notification permission...');
 
-            // Check se già denied
             if (checkNotificationPermission() === 'denied') {
                 console.log('❌ Notifications permanently denied by user');
                 showNotificationDeniedInstructions();
@@ -1377,30 +1376,18 @@ function showNotificationModal() {
                 return;
             }
 
-            // Richiedi permesso
             const result = await Notification.requestPermission();
             console.log('📬 Permission result:', result);
 
             if (result === 'granted') {
                 console.log('✅ Notifications granted - subscribing to push');
                 
-                // Crea la push subscription
                 const subscription = await ensurePushSubscription();
                 
                 if (subscription) {
-                    console.log('✅ Push subscription obtained:', subscription);
-                    
-                    // IMPORTANTE: Aggiorna la variabile globale
+                    console.log('✅ Push subscription obtained');
                     currentPushSubscription = subscription;
                     
-                    // Invia al backend
-                    const email = getUserEmail();
-                    if (email) {
-                        const backendResult = await sendSubscriptionToBackend(email, subscription);
-                        console.log('📤 Backend save result:', backendResult);
-                    }
-                    
-                    // Sincronizza tutto (inclusa la subscription)
                     await syncToServer();
                     
                     console.log('✅ Subscription synced to server');
@@ -1416,7 +1403,7 @@ function showNotificationModal() {
             }
 
         } catch (err) {
-            console.error('❌ Notification enable error:', err);
+            console.error('❌ Error:', err);
             showNotification('⚠️ Notification setup error', 'error');
         } finally {
             cleanup();
@@ -1616,27 +1603,45 @@ async function ensurePushSubscription() {
             return null;
         }
         
-        console.log('🔄 Waiting for Service Worker...');
-        const registration = await navigator.serviceWorker.ready;
+        console.log('🔄 Registering Service Worker...');
+        const registration = await navigator.serviceWorker.register('/pwa/sw.js', {
+            scope: '/pwa/'
+        });
+        
+        console.log('✅ Service Worker registered');
+        
+        await navigator.serviceWorker.ready;
         console.log('✅ Service Worker ready');
         
-        // Controlla se esiste già
         const existing = await registration.pushManager.getSubscription();
         
         if (existing) {
-            console.log('✅ Push subscription already exists');
+            console.log('✅ Push subscription exists');
+            currentPushSubscription = existing;
+            
+            const email = getUserEmail();
+            if (email) {
+                await sendSubscriptionToBackend(email, existing);
+            }
+            
             return existing;
         }
         
         console.log('📝 Creating new push subscription...');
         
-        // Crea nuova subscription
         const sub = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
         });
         
-        console.log('✅ Push subscription created successfully');
+        console.log('✅ Push subscription created');
+        currentPushSubscription = sub;
+        
+        const email = getUserEmail();
+        if (email) {
+            await sendSubscriptionToBackend(email, sub);
+        }
+        
         return sub;
         
     } catch (err) {
@@ -2812,25 +2817,25 @@ async function initServiceWorker() {
         }
     }
     
-    window.addEventListener('load', async () => {
-        try {
-            const registration = await navigator.serviceWorker.register('./sw.js');
-            console.log('✅ Service Worker registered:', registration.scope);
-            
-            await navigator.serviceWorker.ready;
-            console.log('✅ Service Worker ready');
+    try {
+        const registration = await navigator.serviceWorker.register('/pwa/sw.js', {
+            scope: '/pwa/'
+        });
+        console.log('✅ Service Worker registered:', registration.scope);
+        
+        await navigator.serviceWorker.ready;
+        console.log('✅ Service Worker ready');
 
-            if (checkPWAStatus()) {
-                console.log('✅ PWA detected in SW init, checking notifications...');
-                setTimeout(() => {
-                    checkAndPromptNotifications().catch(err => console.error('Notification prompt error:', err));
-                }, 2000);
-            }
-            
-        } catch (error) {
-            console.error('❌ Service Worker registration error:', error);
+        if (checkPWAStatus()) {
+            console.log('✅ PWA detected, checking notifications...');
+            setTimeout(() => {
+                checkAndPromptNotifications().catch(err => console.error('Notification prompt error:', err));
+            }, 2000);
         }
-    });
+        
+    } catch (error) {
+        console.error('❌ Service Worker registration error:', error);
+    }
 }
 
 
