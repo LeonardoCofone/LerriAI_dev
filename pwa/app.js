@@ -1330,42 +1330,76 @@ function showNotificationModal() {
     });
 
     document.getElementById('lerri-notif-enable').addEventListener('click', async () => {
+        console.log('-----🔔 Enable clicked');
+
         cleanup();
-        
-        try {
-            const permission = await Notification.requestPermission();
+
+        console.log('-----⏳ Requesting notification permission');
+        Notification.requestPermission();
+
+        const startTime = Date.now();
+
+        const checkPermission = async () => {
+            const permission = Notification.permission;
+            console.log('-----🔎 Current permission:', permission);
 
             if (permission === 'granted') {
-                const registration = await navigator.serviceWorker.ready;
-                
-                const subscription = await registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-                });
+                console.log('-----✅ Permission granted');
 
-                currentPushSubscription = subscription;
-                console.log('✅ Subscription createddddddddd------:', subscription);
+                try {
+                    console.log('-----⏳ Waiting for service worker');
+                    const registration = await navigator.serviceWorker.ready;
+                    console.log('-----✅ Service worker ready');
 
-                const email = getUserEmail();
-                if (email) {
-                    const saved = await sendSubscriptionToBackend(email, subscription);
-                    console.log('✅ BBBackend save result:', saved);
-                    
-                    await syncToServer();
-                    console.log('✅ SSSSSync completed');
+                    console.log('-----⏳ Subscribing to push');
+                    const subscription = await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                    });
+
+                    currentPushSubscription = subscription;
+                    console.log('-----📩 Push subscription created:', subscription);
+
+                    const email = getUserEmail();
+                    console.log('-----📧 User email:', email);
+
+                    if (email) {
+                        console.log('-----⏳ Sending subscription to backend');
+                        const saved = await sendSubscriptionToBackend(email, subscription);
+                        console.log('-----✅ Backend save result:', saved);
+
+                        console.log('-----⏳ Syncing with server');
+                        await syncToServer();
+                        console.log('-----✅ Sync completed');
+                    }
+
+                    showNotification('✅ Notifications enabled!', 'success');
+                    console.log('-----🎉 Flow completed successfully');
+
+                } catch (err) {
+                    console.error('-----❌ Push setup error:', err);
+                    showNotification('-----⚠️ Notification setup error', 'error');
                 }
 
-                showNotification('✅ Notifications enabled!', 'success');
-            } else {
+            } else if (permission === 'denied') {
+                console.warn('-----🚫 Permission denied');
                 localStorage.setItem('notification-prompt-dismiss-time', Date.now().toString());
                 showNotificationDeniedInstructions();
-            }
 
-        } catch (err) {
-            console.error('❌ Error:', err);
-            showNotification('⚠️ Notification setup error', 'error');
-        }
+            } else {
+                if (Date.now() - startTime > 15000) {
+                    console.warn('⏰ Permission request timeout');
+                    showNotification('⏳ Permission not answered', 'info');
+                    return;
+                }
+
+                setTimeout(checkPermission, 500);
+            }
+        };
+
+        checkPermission();
     });
+
 }
 
 function hideNotificationModal() {
