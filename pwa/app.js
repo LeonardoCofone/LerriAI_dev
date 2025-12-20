@@ -18,154 +18,13 @@ const LANGUAGES = {
 const VAPID_PUBLIC_KEY = 'BGR8PSUhEMD5Jij2vMHJamrLlnPZAi26RDhWCRLYKr0J_Cl2L7pZjgbqTHxKqzqU4bMYLNibnl4ltPQzIFkr0-c';
 let isProcessing = false;
 
-//DEBUGGGGG
-// ============================================
-// AGGIUNGI QUESTO IN app.js per debugging
-// Poi usa window.debugNotifications() nella console
-// ============================================
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/pwa/sw.js')
+        .then(reg => console.log('✅ SW registered with scope:', reg.scope))
+        .catch(err => console.error('❌ SW registration failed:', err));
+}
 
-window.debugNotifications = async function() {
-    console.log('=== NOTIFICATION DEBUG ===');
-    
-    // 1. Check permessi
-    console.log('1. Notification permission:', Notification.permission);
-    
-    // 2. Check Service Worker
-    if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        console.log('2. Service Workers registered:', registrations.length);
-        
-        if (registrations.length > 0) {
-            const reg = registrations[0];
-            console.log('   - Scope:', reg.scope);
-            console.log('   - Active:', !!reg.active);
-            
-            // 3. Check Push Subscription
-            try {
-                const sub = await reg.pushManager.getSubscription();
-                console.log('3. Push subscription exists:', !!sub);
-                if (sub) {
-                    console.log('   - Endpoint:', sub.endpoint);
-                    console.log('   - Keys:', Object.keys(sub.toJSON()));
-                }
-            } catch (err) {
-                console.error('   - Error checking subscription:', err);
-            }
-        }
-    } else {
-        console.log('2. Service Workers NOT supported');
-    }
-    
-    // 4. Check variabili globali
-    console.log('4. currentPushSubscription:', !!currentPushSubscription);
-    console.log('   - Value:', currentPushSubscription);
-    
-    // 5. Check user data
-    const email = getUserEmail();
-    console.log('5. User email:', email);
-    
-    if (email) {
-        try {
-            const response = await fetch(`https://api.lerriai.com/api/load-data?user=${encodeURIComponent(email)}`);
-            const data = await response.json();
-            console.log('6. Server data:');
-            console.log('   - pushSubscription:', !!data.pushSubscription);
-            if (data.pushSubscription) {
-                console.log('   - Endpoint:', data.pushSubscription.endpoint);
-            }
-        } catch (err) {
-            console.error('6. Error loading data:', err);
-        }
-    }
-    
-    console.log('=== END DEBUG ===');
-};
 
-// ============================================
-// COMANDO PER TESTARE LA SUBSCRIPTION
-// ============================================
-
-window.testSubscription = async function() {
-    console.log('🧪 Testing subscription flow...');
-    
-    try {
-        // 1. Request permission
-        const permission = await Notification.requestPermission();
-        console.log('1. Permission:', permission);
-        
-        if (permission !== 'granted') {
-            console.log('❌ Permission denied');
-            return;
-        }
-        
-        // 2. Get Service Worker
-        const registration = await navigator.serviceWorker.ready;
-        console.log('2. Service Worker ready ✅');
-        
-        // 3. Create subscription
-        const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-        });
-        console.log('3. Subscription created ✅', subscription);
-        
-        // 4. Save to global variable
-        currentPushSubscription = subscription;
-        console.log('4. Global variable updated ✅');
-        
-        // 5. Send to backend
-        const email = getUserEmail();
-        if (email) {
-            const result = await sendSubscriptionToBackend(email, subscription);
-            console.log('5. Backend save:', result ? '✅' : '❌');
-        }
-        
-        // 6. Sync to server
-        await syncToServer();
-        console.log('6. Sync completed ✅');
-        
-        console.log('✅ All tests passed!');
-        
-    } catch (err) {
-        console.error('❌ Test failed:', err);
-    }
-};
-
-// ============================================
-// COMANDO PER INVIARE UNA NOTIFICA DI TEST
-// ============================================
-
-window.sendTestNotification = async function() {
-    const email = getUserEmail();
-    if (!email) {
-        console.log('❌ No user logged in');
-        return;
-    }
-    
-    try {
-        const response = await fetch('https://api.lerriai.com/api/send-notification', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                email,
-                title: '🧪 Test Notification',
-                body: 'If you see this, notifications are working! 🎉',
-                data: { url: '/pwa/index.html' }
-            })
-        });
-        
-        const data = await response.json();
-        console.log('Response:', data);
-        
-        if (data.success) {
-            console.log('✅ Test notification sent successfully!');
-        } else {
-            console.error('❌ Failed to send:', data.error);
-        }
-    } catch (err) {
-        console.error('❌ Error:', err);
-    }
-};
 
 function loadPayPalSDK() {
     if (window.paypalLoaded || document.querySelector('script[src*="paypal.com/sdk"]')) {
@@ -268,7 +127,9 @@ async function sendNotificationReale(title, body, data = {}) {
     if (Notification.permission !== 'granted') return;
     
     try {
-        const registration = await navigator.serviceWorker.ready;
+        const regs = await navigator.serviceWorker.getRegistrations();
+        if (!regs.length) throw new Error('Service worker not registered');
+        const registration = regs[0];
         await registration.showNotification(title, {
             body: body.substring(0, 100) + (body.length > 100 ? '...' : ''), // Max 100 caratteri
             icon: '/pwa/icon/icon-192.png',
@@ -1348,7 +1209,9 @@ function showNotificationModal() {
 
                 try {
                     console.log('-----⏳ Waiting for service worker');
-                    const registration = await navigator.serviceWorker.ready;
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    if (!regs.length) throw new Error('Service worker not registered');
+                    const registration = regs[0];
                     console.log('-----✅ Service worker ready');
 
                     console.log('-----⏳ Subscribing to push');
@@ -1593,17 +1456,44 @@ async function ensurePushSubscription() {
             console.error('❌ Service Worker not supported');
             return null;
         }
-        
+
+        // --- Pulizia vecchi SW ---
+        try {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (let registration of registrations) {
+                await registration.unregister();
+                console.log('🗑️ Old Service Worker removed');
+            }
+        } catch (error) {
+            console.error('Error unregistering SW:', error);
+        }
+
+        // --- Pulizia cache ---
+        if ('caches' in window) {
+            try {
+                const cacheNames = await caches.keys();
+                for (let cacheName of cacheNames) {
+                    await caches.delete(cacheName);
+                    console.log('🗑️ Cache removed:', cacheName);
+                }
+            } catch (error) {
+                console.error('Error clearing caches:', error);
+            }
+        }
+
+        // --- Registrazione nuovo SW ---
         const baseUrl = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
 
         const registration = await navigator.serviceWorker.register(`${baseUrl}sw.js`, {
             scope: baseUrl
         });
-        
+        console.log('✅ Service Worker registered:', registration.scope);
+
         await navigator.serviceWorker.ready;
-        
+        console.log('✅ Service Worker ready');
+
+        // --- Gestione push subscription ---
         const existing = await registration.pushManager.getSubscription();
-        
         if (existing) {
             currentPushSubscription = existing;
             const email = getUserEmail();
@@ -1612,26 +1502,26 @@ async function ensurePushSubscription() {
             }
             return existing;
         }
-        
+
         const sub = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
         });
-        
+
         currentPushSubscription = sub;
-        
         const email = getUserEmail();
         if (email) {
             await sendSubscriptionToBackend(email, sub);
         }
-        
+
         return sub;
-        
+
     } catch (err) {
         console.error('❌ ensurePushSubscription error:', err);
         return null;
     }
 }
+
 
 async function sendSubscriptionToBackend(email, subscription) {
     try {
@@ -2776,18 +2666,18 @@ async function initServiceWorker() {
 
     try {
         const registrations = await navigator.serviceWorker.getRegistrations();
-        for (let registration of registrations) {
+        for (const registration of registrations) {
             await registration.unregister();
             console.log('🗑️ Old Service Worker removed');
         }
     } catch (error) {
         console.error('Error unregistering SW:', error);
     }
-    
+
     if ('caches' in window) {
         try {
             const cacheNames = await caches.keys();
-            for (let cacheName of cacheNames) {
+            for (const cacheName of cacheNames) {
                 await caches.delete(cacheName);
                 console.log('🗑️ Cache removed:', cacheName);
             }
@@ -2795,29 +2685,41 @@ async function initServiceWorker() {
             console.error('Error clearing caches:', error);
         }
     }
-    
-    try {
-        const baseUrl = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
 
-        const registration = await navigator.serviceWorker.register(`${baseUrl}sw.js`, {
-            scope: baseUrl
-        });
+    try {
+        const baseUrl =
+            window.location.pathname.substring(
+                0,
+                window.location.pathname.lastIndexOf('/') + 1
+            );
+
+        const registration = await navigator.serviceWorker.register(
+            `${baseUrl}sw.js`,
+            { scope: baseUrl }
+        );
+
         console.log('✅ Service Worker registered:', registration.scope);
-        
-        await navigator.serviceWorker.ready;
-        console.log('✅ Service Worker ready');
+
+        const regs = await navigator.serviceWorker.getRegistrations();
+        if (!regs.length) {
+            throw new Error('Service Worker not available after registration');
+        }
+
+        console.log('✅ Service Worker available');
 
         if (checkPWAStatus()) {
             console.log('✅ PWA detected, checking notifications...');
             setTimeout(() => {
-                checkAndPromptNotifications().catch(err => console.error('Notification prompt error:', err));
+                checkAndPromptNotifications()
+                    .catch(err => console.error('Notification prompt error:', err));
             }, 2000);
         }
-        
+
     } catch (error) {
         console.error('❌ Service Worker registration error:', error);
     }
 }
+
 
 
 
