@@ -1201,71 +1201,61 @@ function showNotificationModal() {
         cleanup();
 
         console.log('-----⏳ Requesting notification permission');
-        Notification.requestPermission();
-
-        const startTime = Date.now();
-
-        const checkPermission = async () => {
-            const permission = Notification.permission;
-            console.log('-----🔎 Current permission:', permission);
+        
+        try {
+            const permission = await Notification.requestPermission();
+            console.log('-----📊 Permission result:', permission);
 
             if (permission === 'granted') {
                 console.log('-----✅ Permission granted');
 
-                try {
-                    console.log('-----⏳ Waiting for service worker');
-                    const regs = await navigator.serviceWorker.getRegistrations();
-                    if (!regs.length) throw new Error('Service worker not registered');
-                    const registration = regs[0];
-                    console.log('-----✅ Service worker ready');
-
-                    console.log('-----⏳ Subscribing to push');
-                    const subscription = await registration.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-                    });
-
-                    currentPushSubscription = subscription;
-                    console.log('-----📩 Push subscription created:', subscription);
-
-                    const email = getUserEmail();
-                    console.log('-----📧 User email:', email);
-
-                    if (email) {
-                        console.log('-----⏳ Sending subscription to backend');
-                        const saved = await sendSubscriptionToBackend(email, subscription);
-                        console.log('-----✅ Backend save result:', saved);
-
-                        console.log('-----⏳ Syncing with server');
-                        await syncToServer();
-                        console.log('-----✅ Sync completed');
-                    }
-
-                    showNotification('✅ Notifications enabled!', 'success');
-                    console.log('-----🎉 Flow completed successfully');
-
-                } catch (err) {
-                    console.error('-----❌ Push setup error:', err);
-                    showNotification('-----⚠️ Notification setup error', 'error');
+                await navigator.serviceWorker.ready;
+                console.log('-----✅ Service worker ready');
+                
+                const registration = await navigator.serviceWorker.getRegistration(baseUrl);
+                
+                if (!registration) {
+                    throw new Error('Service worker not registered');
                 }
+                
+                console.log('-----✅ Service Worker found');
+
+                console.log('-----⏳ Subscribing to push');
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                });
+
+                currentPushSubscription = subscription;
+                console.log('-----📩 Push subscription created:', subscription);
+
+                const email = getUserEmail();
+                console.log('-----📧 User email:', email);
+
+                if (email) {
+                    console.log('-----⏳ Sending subscription to backend');
+                    const saved = await sendSubscriptionToBackend(email, subscription);
+                    console.log('-----✅ Backend save result:', saved);
+
+                    console.log('-----⏳ Syncing with server');
+                    await syncToServer();
+                    console.log('-----✅ Sync completed');
+                }
+
+                showNotification('✅ Notifications enabled!', 'success');
+                console.log('-----🎉 Flow completed successfully');
 
             } else if (permission === 'denied') {
                 console.warn('-----🚫 Permission denied');
                 localStorage.setItem('notification-prompt-dismiss-time', Date.now().toString());
                 showNotificationDeniedInstructions();
-
             } else {
-                if (Date.now() - startTime > 15000) {
-                    console.warn('⏰ Permission request timeout');
-                    showNotification('⏳ Permission not answered', 'info');
-                    return;
-                }
-
-                setTimeout(checkPermission, 500);
+                console.log('-----ℹ️ Permission dismissed');
             }
-        };
-
-        checkPermission();
+        } catch (err) {
+            console.error('-----❌ Error:', err);
+            showNotification('⚠️ Notification setup error', 'error');
+        }
     });
 
 }
@@ -1462,11 +1452,17 @@ async function ensurePushSubscription() {
             return null;
         }
 
-        const registration = await navigator.serviceWorker.register(`${baseUrl}sw.js`, { scope: baseUrl });
-        console.log('✅ Service Worker registered:', registration.scope);
-
         await navigator.serviceWorker.ready;
         console.log('✅ Service Worker ready');
+
+        const registration = await navigator.serviceWorker.getRegistration(baseUrl);
+        
+        if (!registration) {
+            console.error('❌ No Service Worker registration found');
+            return null;
+        }
+
+        console.log('✅ Service Worker registration found:', registration.scope);
 
         let existing = await registration.pushManager.getSubscription();
         if (!existing) {
@@ -1474,6 +1470,9 @@ async function ensurePushSubscription() {
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
             });
+            console.log('✅ New push subscription created');
+        } else {
+            console.log('✅ Using existing push subscription');
         }
 
         currentPushSubscription = existing;
@@ -2633,18 +2632,27 @@ async function initServiceWorker() {
     }
 
     try {
-        const registration = await navigator.serviceWorker.register(`${baseUrl}sw.js`, { scope: baseUrl });
+        const registration = await navigator.serviceWorker.register(`${baseUrl}sw.js`, { 
+            scope: baseUrl 
+        });
         console.log('✅ Service Worker registered:', registration.scope);
 
         await navigator.serviceWorker.ready;
-        console.log('✅ Service Worker ready');
+        console.log('✅ Service Worker ready and active');
+
+        registration.addEventListener('updatefound', () => {
+            console.log('🔄 Service Worker update found');
+        });
 
         if (checkPWAStatus()) {
-            console.log('✅ PWA detected, checking notifications...');
-            setTimeout(() => {
-                checkAndPromptNotifications()
-                    .catch(err => console.error('Notification prompt error:', err));
-            }, 2000);
+            console.log('✅ PWA detected, checking notifications after delay...');
+            setTimeout(async () => {
+                try {
+                    await checkAndPromptNotifications();
+                } catch (err) {
+                    console.error('Notification prompt error:', err);
+                }
+            }, 3000);
         }
 
     } catch (error) {
