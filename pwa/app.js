@@ -1556,8 +1556,10 @@ async function ensurePushSubscription() {
             return null;
         }
         
-        const registration = await navigator.serviceWorker.register('/pwa/sw.js', {
-            scope: '/pwa/'
+        const baseUrl = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+
+        const registration = await navigator.serviceWorker.register(`${baseUrl}sw.js`, {
+            scope: baseUrl
         });
         
         await navigator.serviceWorker.ready;
@@ -2757,8 +2759,10 @@ async function initServiceWorker() {
     }
     
     try {
-        const registration = await navigator.serviceWorker.register('/pwa/sw.js', {
-            scope: '/pwa/'
+        const baseUrl = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+
+        const registration = await navigator.serviceWorker.register(`${baseUrl}sw.js`, {
+            scope: baseUrl
         });
         console.log('✅ Service Worker registered:', registration.scope);
         
