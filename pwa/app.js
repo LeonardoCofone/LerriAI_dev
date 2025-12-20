@@ -1198,36 +1198,44 @@ function showNotificationModal() {
     document.getElementById('lerri-notif-enable').addEventListener('click', async () => {
         console.log('-----🔔 Enable clicked');
 
-        cleanup();
+        const enableBtn = document.getElementById('lerri-notif-enable');
+        enableBtn.disabled = true;
+        enableBtn.textContent = '⏳ Loading...';
 
-        console.log('-----⏳ Requesting notification permission');
-        
         try {
+            console.log('-----⏳ Requesting notification permission');
             const permission = await Notification.requestPermission();
             console.log('-----📊 Permission result:', permission);
 
             if (permission === 'granted') {
                 console.log('-----✅ Permission granted');
 
+                console.log('-----⏳ Waiting for service worker ready');
                 await navigator.serviceWorker.ready;
                 console.log('-----✅ Service worker ready');
                 
+                console.log('-----⏳ Getting registration with baseUrl:', baseUrl);
                 const registration = await navigator.serviceWorker.getRegistration(baseUrl);
+                console.log('-----📋 Registration result:', registration);
                 
                 if (!registration) {
+                    console.error('-----❌ No registration found');
                     throw new Error('Service worker not registered');
                 }
                 
-                console.log('-----✅ Service Worker found');
+                console.log('-----✅ Service Worker found:', registration.scope);
 
-                console.log('-----⏳ Subscribing to push');
+                console.log('-----⏳ Subscribing to push notifications');
+                console.log('-----🔑 VAPID key:', VAPID_PUBLIC_KEY.substring(0, 20) + '...');
+                
                 const subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
                 });
 
                 currentPushSubscription = subscription;
-                console.log('-----📩 Push subscription created:', subscription);
+                console.log('-----📩 Push subscription created successfully');
+                console.log('-----📩 Subscription endpoint:', subscription.endpoint.substring(0, 50) + '...');
 
                 const email = getUserEmail();
                 console.log('-----📧 User email:', email);
@@ -1242,22 +1250,27 @@ function showNotificationModal() {
                     console.log('-----✅ Sync completed');
                 }
 
+                cleanup();
                 showNotification('✅ Notifications enabled!', 'success');
                 console.log('-----🎉 Flow completed successfully');
 
             } else if (permission === 'denied') {
                 console.warn('-----🚫 Permission denied');
                 localStorage.setItem('notification-prompt-dismiss-time', Date.now().toString());
+                cleanup();
                 showNotificationDeniedInstructions();
             } else {
-                console.log('-----ℹ️ Permission dismissed');
+                console.log('-----ℹ️ Permission dismissed/default');
+                cleanup();
             }
         } catch (err) {
-            console.error('-----❌ Error:', err);
-            showNotification('⚠️ Notification setup error', 'error');
+            console.error('-----❌ Full error object:', err);
+            console.error('-----❌ Error message:', err.message);
+            console.error('-----❌ Error stack:', err.stack);
+            cleanup();
+            showNotification('⚠️ Notification setup error: ' + err.message, 'error');
         }
     });
-
 }
 
 function hideNotificationModal() {

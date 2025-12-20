@@ -1,14 +1,16 @@
-const CACHE_NAME = 'lerri-v1.1';
+const CACHE_NAME = 'lerri-v1.2';
 const baseUrl = '/LerriAI_dev/pwa/';
+
+// Only cache files that definitely exist
 const urlsToCache = [
-  baseUrl,
   `${baseUrl}index.html`,
   `${baseUrl}app.js`,
   `${baseUrl}app.css`,
-  `${baseUrl}schedule-manager.js`,
+  `${baseUrl}manifest.json`,
+  `${baseUrl}icon/icon-192.png`,
+  `${baseUrl}icon/icon-512.png`,
   `${baseUrl}schedule-manager.css`,
-  `${baseUrl}icons/icon-192.png`,
-  `${baseUrl}icons/icon-512.png`
+  `${baseUrl}schedule-manager.js`
 ];
 
 self.addEventListener('install', event => {
@@ -16,12 +18,22 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('[SW] Caching files');
-        return cache.addAll(urlsToCache);
+        console.log('[SW] Caching essential files');
+        // Cache files one by one to see which one fails
+        return Promise.all(
+          urlsToCache.map(url => {
+            return cache.add(url).catch(err => {
+              console.error('[SW] Failed to cache:', url, err);
+            });
+          })
+        );
       })
       .then(() => {
-        console.log('[SW] Skip waiting');
+        console.log('[SW] Installation complete, skip waiting');
         return self.skipWaiting();
+      })
+      .catch(err => {
+        console.error('[SW] Installation failed:', err);
       })
   );
 });
@@ -44,6 +56,9 @@ self.addEventListener('activate', event => {
         console.log('[SW] Claiming clients');
         return self.clients.claim();
       })
+      .then(() => {
+        console.log('[SW] Activation complete');
+      })
   );
 });
 
@@ -65,7 +80,7 @@ self.addEventListener('push', event => {
   let data = { 
     title: 'LerriAI', 
     body: 'New notification', 
-    icon: `${baseUrl}icons/icon-192.png` 
+    icon: `${baseUrl}icon/icon-192.png` 
   };
   
   if (event.data) {
@@ -79,8 +94,8 @@ self.addEventListener('push', event => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: data.icon || `${baseUrl}icons/icon-192.png`,
-      badge: data.badge || `${baseUrl}icons/icon-192.png`,
+      icon: data.icon || `${baseUrl}icon/icon-192.png`,
+      badge: data.badge || `${baseUrl}icon/icon-192.png`,
       vibrate: [200, 100, 200],
       data: data.data || { url: `${baseUrl}index.html` }
     })
