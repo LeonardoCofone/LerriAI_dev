@@ -149,7 +149,7 @@ async function sendNotificationReale(title, body, data = {}) {
         console.error('Notification error:', error);
     }
 }
-// Dopo sendNotificationReale()
+
 async function initNotifications() {
     if ('serviceWorker' in navigator && 'Notification' in window) {
         const permission = await Notification.requestPermission();
@@ -751,11 +751,24 @@ function addMessage(text, sender, save = true, audioBlob = null, skipSync = fals
         if (messagesArray.length > 25) messagesArray = messagesArray.slice(-25);
     }
 
-    if (sender === 'bot' && text !== "⏳ Processing..." && document.hidden) {
-        const preview = text.replace(/[*_~`#]/g, '').substring(0, 80);
-        sendNotificationReale('New message from Lerri', preview, { url: '/pwa/index.html' });
+    if (sender === 'bot' && 
+        text !== "⏳ Processing..." && 
+        !text.startsWith('📊 Generating') &&
+        !text.startsWith('⏳')) {
+        
+        const preview = text
+            .replace(/[*_~`#\[\]]/g, '')
+            .replace(/<[^>]*>/g, '')
+            .substring(0, 100);
+        
+        sendNotificationReale(
+            'New message from Lerri', 
+            preview, 
+            { url: `${baseUrl}index.html` }
+        ).catch(err => {
+            console.error('Notification send error:', err);
+        });
     }
-
     
     return msgEl;
 }
