@@ -240,6 +240,7 @@ function openScheduleManager() {
     `;
 
     document.body.appendChild(overlay);
+    document.body.classList.add('modal-open');
     
     initializeScheduleCalendar();
     initializeScheduleEmojiPickers();
@@ -269,9 +270,11 @@ function openScheduleManager() {
 
 function closeScheduleManager() {
     const overlay = document.getElementById('scheduleManagerOverlay');
-    if (overlay) overlay.remove();
+    if (overlay) {
+        document.body.classList.remove('modal-open');
+        overlay.remove();
+    }
 }
-
 function loadExistingSchedule() {
     scheduleSlots = {};
     scheduleCategories = {};
@@ -758,6 +761,7 @@ function openScheduleSlotEditor(slot) {
     `;
     document.body.appendChild(modal);
     modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
 
     selectedSlotEmoji = slot.emoji || selectedSlotEmoji || '🕒';
     const preview = modal.querySelector('#schedSelectedEmojiPreview');
@@ -830,6 +834,7 @@ function closeScheduleSlotEditor() {
         delete modal._keyHandler;
     }
 
+    document.body.classList.remove('modal-open');
     modal.remove();
     currentEditingSlot = null;
 }

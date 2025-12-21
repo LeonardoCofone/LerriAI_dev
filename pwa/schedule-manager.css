@@ -7,8 +7,15 @@
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     z-index: 10000;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     padding: 20px;
     animation: fadeIn 0.3s ease;
+}
+
+body.modal-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
 }
 
 .schedule-manager-container {
@@ -666,8 +673,8 @@
     align-items: center;
     justify-content: center;
     z-index: 10001;
-    padding: 1rem;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .slot-ghost {
@@ -748,9 +755,10 @@
     max-width: 500px;
     max-height: 90vh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
     animation: modalSlideIn 0.3s ease;
-    margin: auto;
+    margin: 20px auto;
 }
 
 @keyframes modalSlideIn {
