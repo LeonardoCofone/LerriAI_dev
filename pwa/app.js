@@ -331,15 +331,15 @@ function initDailyBriefingButton() {
 
 async function checkTrialStatus() {
     const email = getUserEmail();
-    if (!email) return { canSendMessage: true, messagesRemaining: 10 };
+    if (!email) return { canSendMessage: true, messagesRemaining: 80 };
     
     try {
-        const response = await fetch(`https://api.lerriai.com/api/check-trial-status?email=${encodeURIComponent(email)}`);
+        const response = await fetch(`${API_BASE_URL}/api/check-trial-status?email=${encodeURIComponent(email)}`);
         const data = await response.json();
         return data;
     } catch (error) {
         console.error('Trial status check error:', error);
-        return { canSendMessage: true, messagesRemaining: 10 };
+        return { canSendMessage: true, messagesRemaining: 80 };
     }
 }
 
@@ -373,204 +373,104 @@ async function showSubscriptionModal() {
     const existingModal = document.getElementById('subscription-modal');
     if (existingModal) return;
 
-    await loadPayPalSDK();
-
     const modal = document.createElement('div');
     modal.id = 'subscription-modal';
     modal.innerHTML = `
         <div class="subscription-modal-overlay">
             <div class="subscription-modal-content">
-            
-            <h2 class="premium-title">🚀 Upgrade to Premium</h2>
-            <p class="premium-subtitle">
-                You've reached the free message limit.  
-                Unlock the full power of LerriAI.
-            </p>
-
-            <div class="subscription-benefits">
-                <p>✨ Unlimited messages</p>
-                <p>🤖 Full AI assistant access</p>
-                <p>📅 Advanced calendar features</p>
-                <p>💾 Unlimited storage</p>
-            </div>
-
-            <div class="premium-divider"></div>
-
-            <p class="subscription-price">
-                $2.99 <span>/ month</span>
-            </p>
-
-            <div id="paypal-button-container" style="margin-top: 20px;"></div>
-            <div id="paypal-loading" style="text-align: center; padding: 20px; color: #667eea;">
-                Loading payment options...
-            </div>
-
+                <h2 class="premium-title">🚀 Upgrade to Premium</h2>
+                <p class="premium-subtitle">Unlock unlimited AI power</p>
+                
+                <div class="subscription-benefits">
+                    <p>✨ Unlimited messages</p>
+                    <p>🤖 Full AI assistant access</p>
+                    <p>📅 Advanced calendar features</p>
+                    <p>📧 Gmail integration</p>
+                    <p>☁️ Google Drive access</p>
+                </div>
+                
+                <div class="premium-divider"></div>
+                
+                <p class="subscription-price">
+                    €2.99 <span>/ month + usage</span>
+                </p>
+                <p style="font-size: 0.85rem; color: #64748b; margin-top: 8px;">
+                    Base subscription + pay only for what you use<br>
+                    (typically under €1/month for usage)
+                </p>
+                
+                <div id="payment-element"></div>
+                <button id="submit-payment" class="btn-primary" style="width: 100%; margin-top: 20px;">
+                    Subscribe Now
+                </button>
+                
+                <button id="close-subscription-modal" class="btn-secondary" style="width: 100%; margin-top: 10px;">
+                    Maybe Later
+                </button>
             </div>
         </div>
     `;
     
-    const style = document.createElement('style');
-    style.textContent = `
-        .subscription-modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(153, 0, 128, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            animation: fadeIn 0.3s ease-out;
-        }
-        .subscription-modal-content {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 20px 60px rgba(74, 58, 58, 0.3);
-            text-align: center;
-        }
-        .premium-title {
-            font-size: 2rem;
-            margin: 0 0 15px 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .premium-subtitle {
-            color: #64748b;
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-        .subscription-benefits {
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .subscription-benefits p {
-            margin: 12px 0;
-            font-size: 1.1rem;
-            color: #1e293b;
-        }
-        .premium-divider {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
-            margin: 20px 0;
-        }
-        .subscription-price {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #667eea;
-            margin: 20px 0;
-        }
-        .subscription-price span {
-            font-size: 1.2rem;
-            color: #64748b;
-            font-weight: 400;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-    `;
-    document.head.appendChild(style);
-    
     document.body.appendChild(modal);
-    document.body.style.overflow = 'hidden';
     
-    const allInputs = document.querySelectorAll('input, textarea, button, select');
-    allInputs.forEach(el => {
-        if (!el.closest('#subscription-modal')) {
-            el.disabled = true;
-            el.style.opacity = '0.5';
-            el.style.pointerEvents = 'none';
-        }
-    });
+    const stripe = Stripe(process.env.STRIPE_PUBLISHABLE_KEY || 'pk_test_...');
     
-    if (window.paypal) {
-        document.getElementById('paypal-loading').style.display = 'none';
-        
-        window.paypal.Buttons({
-            style: {
-                shape: 'rect',
-                color: 'gold',
-                layout: 'vertical',
-                label: 'subscribe',
-                height: 50
-            },
-            createSubscription: async function(data, actions) {
-                const email = getUserEmail();
-                const response = await fetch('https://api.lerriai.com/api/create-subscription', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-                
-                const result = await response.json();
-                if (!result.subscriptionId) {
-                    throw new Error('Failed to create subscription');
-                }
-                return result.subscriptionId;
-            },
-            onApprove: async function(data, actions) {
-                const email = getUserEmail();
-                const response = await fetch('https://api.lerriai.com/api/activate-subscription', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        email, 
-                        subscriptionId: data.subscriptionID 
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    document.body.style.overflow = '';
-                    
-                    const allInputs = document.querySelectorAll('input, textarea, button, select');
-                    allInputs.forEach(el => {
-                        el.disabled = false;
-                        el.style.opacity = '';
-                        el.style.pointerEvents = '';
-                    });
-                    
-                    modal.remove();
-                    showNotification('✅ Subscription activated! Enjoy unlimited messages!', 'success');
-                    await loadDataFromServer();
-                    location.reload();
-                } else {
-                    showNotification('❌ Subscription activation failed', 'error');
-                }
-            },
-            onError: function(err) {
-                console.error('PayPal error:', err);
-                showNotification('❌ Payment error. Please try again.', 'error');
-                document.getElementById('paypal-loading').innerHTML = `
-                    <p style="color: #ef4444; margin-top: 20px;">
-                        Payment system unavailable. Please try again later or contact support.
-                    </p>
-                `;
-            }
-        }).render('#paypal-button-container').catch(err => {
-            console.error('PayPal render error:', err);
-            document.getElementById('paypal-loading').innerHTML = `
-                <p style="color: #ef4444;">
-                    Unable to load payment options. Please refresh and try again.
-                </p>
-            `;
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/create-subscription`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: getUserEmail() })
         });
-    } else {
-        document.getElementById('paypal-loading').innerHTML = `
-            <p style="color: #ef4444;">
-                Payment system is loading... Please wait or refresh the page.
-            </p>
-        `;
+        
+        const { clientSecret, subscriptionId } = await response.json();
+        
+        const elements = stripe.elements({ clientSecret });
+        const paymentElement = elements.create('payment');
+        paymentElement.mount('#payment-element');
+        
+        document.getElementById('submit-payment').addEventListener('click', async () => {
+            const submitBtn = document.getElementById('submit-payment');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Processing...';
+            
+            const { error } = await stripe.confirmPayment({
+                elements,
+                confirmParams: {
+                    return_url: `${window.location.origin}/pwa/index.html?subscription=success`
+                }
+            });
+            
+            if (error) {
+                showNotification('❌ Payment failed: ' + error.message, 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Subscribe Now';
+            }
+        });
+        
+        document.getElementById('close-subscription-modal').addEventListener('click', () => {
+            modal.remove();
+        });
+        
+    } catch (error) {
+        console.error('Subscription modal error:', error);
+        showNotification('❌ Failed to load payment form', 'error');
+        modal.remove();
     }
 }
 
+async function handleSubscriptionSuccess() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('subscription') === 'success') {
+        showNotification('✅ Subscription activated successfully!', 'success');
+        window.history.replaceState({}, document.title, window.location.pathname);
+        await loadDataFromServer();
+        await updateTrialBanner();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    handleSubscriptionSuccess();
+});
 
 function initEmojiSelect() {
     const emojiSelect = document.getElementById('event-emoji-select');
@@ -647,7 +547,7 @@ let settings = {
     subscription: {
         active: false,
         trialMessagesUsed: 0,
-        trialLimit: 8,
+        trialLimit: 80,
         subscriptionId: null,
         subscriptionStartDate: null,
         subscriptionEndDate: null
@@ -797,7 +697,7 @@ async function syncToServer() {
             subscription: settings.subscription || {
                 active: false,
                 trialMessagesUsed: 0,
-                trialLimit: 8,
+                trialLimit: 80,
                 subscriptionId: null,
                 subscriptionStartDate: null,
                 subscriptionEndDate: null
@@ -882,7 +782,7 @@ async function loadDataFromServer() {
                 subscription: data.settings.subscription || {
                     active: false,
                     trialMessagesUsed: 0,
-                    trialLimit: 8,
+                    trialLimit: 80,
                     subscriptionId: null,
                     subscriptionStartDate: null,
                     subscriptionEndDate: null
