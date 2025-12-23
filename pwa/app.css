@@ -1746,6 +1746,48 @@ footer {
     margin-bottom: 1rem;
 }
 
+.subscription-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.subscription-modal-content {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.premium-title {
+    font-size: 2rem;
+    margin: 0 0 10px;
+    text-align: center;
+}
+
+.subscription-benefits p {
+    margin: 10px 0;
+    font-size: 1.1rem;
+}
+
+.subscription-price {
+    font-size: 2.5rem;
+    font-weight: bold;
+    text-align: center;
+    color: #667eea;
+}
+
+.subscription-price span {
+    font-size: 1rem;
+    color: #64748b;
+}
+
 .chat-header-bar {
     display: flex;
     justify-content: flex-end;
