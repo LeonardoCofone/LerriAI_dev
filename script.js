@@ -212,35 +212,7 @@ function initSmoothScroll() {
     });
 }
 
-// ============================================
-// NAVBAR SCROLL EFFECT
-// ============================================
-function initNavbarScroll() {
-    const navbar = document.querySelector('.navbar');
-    if (!navbar) return;
-    
-    let lastScroll = 0;
-    
-    window.addEventListener('scroll', () => {
-        const currentScroll = window.pageYOffset;
-        
-        // Add shadow on scroll
-        if (currentScroll > 50) {
-            navbar.style.boxShadow = '0 4px 30px rgba(14, 165, 233, 0.1)';
-        } else {
-            navbar.style.boxShadow = 'none';
-        }
-        
-        // Hide/show navbar on scroll direction
-        if (currentScroll > lastScroll && currentScroll > 200) {
-            navbar.style.transform = 'translateY(-100%)';
-        } else {
-            navbar.style.transform = 'translateY(0)';
-        }
-        
-        lastScroll = currentScroll;
-    });
-}
+
 
 // ============================================
 // COUNTER ANIMATION

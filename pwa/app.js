@@ -331,7 +331,7 @@ function initDailyBriefingButton() {
 
 async function checkTrialStatus() {
     const email = getUserEmail();
-    if (!email) return { canSendMessage: true, messagesRemaining: 80 };
+    if (!email) return { canSendMessage: true, messagesRemaining: 50 };
     
     try {
         const response = await fetch(`${API_BASE_URL}/api/check-trial-status?email=${encodeURIComponent(email)}`);
@@ -339,7 +339,7 @@ async function checkTrialStatus() {
         return data;
     } catch (error) {
         console.error('Trial status check error:', error);
-        return { canSendMessage: true, messagesRemaining: 80 };
+        return { canSendMessage: true, messagesRemaining: 50 };
     }
 }
 
@@ -522,7 +522,7 @@ function initEmojiSelect() {
 
 const COSTS = {
     TEXT_MESSAGE: 0.00099,
-    VOICE_PER_SECOND: 0.0035 / 60,
+    VOICE_PER_SECOND: 0.005 / 60,
     VOICE_BASE: 0.00099,
     FILE_BASE: 0.002,
     FILE_PER_MB: 0.003
@@ -547,7 +547,7 @@ let settings = {
     subscription: {
         active: false,
         trialMessagesUsed: 0,
-        trialLimit: 80,
+        trialLimit: 50,
         subscriptionId: null,
         subscriptionStartDate: null,
         subscriptionEndDate: null
@@ -697,7 +697,7 @@ async function syncToServer() {
             subscription: settings.subscription || {
                 active: false,
                 trialMessagesUsed: 0,
-                trialLimit: 80,
+                trialLimit: 50,
                 subscriptionId: null,
                 subscriptionStartDate: null,
                 subscriptionEndDate: null
@@ -782,7 +782,7 @@ async function loadDataFromServer() {
                 subscription: data.settings.subscription || {
                     active: false,
                     trialMessagesUsed: 0,
-                    trialLimit: 80,
+                    trialLimit: 50,
                     subscriptionId: null,
                     subscriptionStartDate: null,
                     subscriptionEndDate: null

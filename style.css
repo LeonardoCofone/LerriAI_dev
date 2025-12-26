@@ -1579,7 +1579,6 @@ body:hover .cursor-glow {
     border: 0;
 }
 
-/* Smooth scroll offset for fixed navbar */
 html {
     scroll-padding-top: 100px;
 }
