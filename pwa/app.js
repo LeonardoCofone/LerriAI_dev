@@ -2256,6 +2256,7 @@ async function saveEvent() {
     const startInput = document.getElementById('day-event-start');
     const endInput = document.getElementById('day-event-end');
     const eventIdInput = document.getElementById('day-event-id');
+    const recurringCheckbox = document.getElementById('event-recurring');
     
     const selectedEmoji = emojiSelect.value || '🕒';
     const titleText = titleInput.value.trim();
@@ -2270,8 +2271,7 @@ async function saveEvent() {
     const start = startInput.value || "00:00";
     const end = endInput.value || "23:59";
     const eventId = eventIdInput.value;
-
-    if (!events[selectedDate]) events[selectedDate] = [];
+    const isRecurring = recurringCheckbox.checked;
 
     const event = { 
         title: fullTitle,
@@ -2282,18 +2282,37 @@ async function saveEvent() {
 
     if (eventId !== '') {
         events[selectedDate][parseInt(eventId)] = event;
-    } else { 
-        events[selectedDate].push(event); 
-        settings.stats.events++; 
+    } else {
+        if (isRecurring) {
+            const baseDate = new Date(selectedDate);
+            const month = baseDate.getMonth();
+            const day = baseDate.getDate();
+            
+            for (let yearOffset = 0; yearOffset < 5; yearOffset++) {
+                const targetYear = baseDate.getFullYear() + yearOffset;
+                const targetDateKey = `${targetYear}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                if (!events[targetDateKey]) events[targetDateKey] = [];
+                events[targetDateKey].push({ ...event });
+            }
+        } else {
+            if (!events[selectedDate]) events[selectedDate] = [];
+            events[selectedDate].push(event);
+        }
+        
+        settings.stats.events++;
     }
 
     await syncToServer();
-    updateStats(); 
-    loadDayEvents(); 
-    clearEventForm(); 
+    updateStats();
+    loadDayEvents();
+    clearEventForm();
     generateCalendar();
     
-    showNotification('✅ Event saved successfully', 'success');
+    const message = isRecurring 
+        ? '✅ Event saved and repeated for 5 years' 
+        : '✅ Event saved successfully';
+    showNotification(message, 'success');
 }
 
 
@@ -2330,6 +2349,7 @@ function clearEventForm() {
     document.getElementById('day-event-start').value = '';
     document.getElementById('day-event-end').value = '';
     document.getElementById('day-event-id').value = '';
+    document.getElementById('event-recurring').checked = false;
 }
 
 function initTasks(){

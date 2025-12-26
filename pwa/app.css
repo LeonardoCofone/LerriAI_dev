@@ -1771,6 +1771,29 @@ footer {
     text-align: center;
 }
 
+.recurring-options {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(99, 102, 241, 0.05);
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.recurring-options label {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    font-weight: normal;
+}
+
+.recurring-options input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-right: 0.75rem;
+    cursor: pointer;
+    accent-color: var(--color-primary);
+}
+
 .subscription-benefits p {
     margin: 10px 0;
     font-size: 1.1rem;
